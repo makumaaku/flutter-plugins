@@ -68,8 +68,8 @@ class HealthFactory {
     });
   }
 
-  /// Revoke permissions obtained earlier.
-  ///
+  /// Revokes permissions of all types.
+  /// Uses `disableFit()` on Google Fit.
   /// Not supported on iOS and method does nothing.
   static Future<void> revokePermissions(List<HealthDataType> types,
       {List<HealthDataAccess>? permissions}) async {
