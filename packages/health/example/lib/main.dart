@@ -281,7 +281,7 @@ class _HealthAppState extends State<HealthApp> {
   }
 
   Future revokeAccess() async {
-    await health.revokePermissions();
+    await HealthFactory.revokePermissions([]);
   }
 
   Widget _contentFetchingData() {
@@ -398,6 +398,12 @@ class _HealthAppState extends State<HealthApp> {
           appBar: AppBar(
             title: const Text('Health Example'),
             actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () {
+                  HealthFactory.revokePermissions([HealthDataType.STEPS]);
+                },
+              ),
               IconButton(
                 icon: Icon(Icons.file_download),
                 onPressed: () {

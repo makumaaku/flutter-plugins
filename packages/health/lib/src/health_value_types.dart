@@ -50,7 +50,9 @@ class AudiogramHealthValue extends HealthValue {
       this._rightEarSensitivities);
 
   List<num> get frequencies => _frequencies;
+
   List<num> get leftEarSensitivities => _leftEarSensitivities;
+
   List<num> get rightEarSensitivities => _rightEarSensitivities;
 
   @override
@@ -130,20 +132,23 @@ class WorkoutHealthValue extends HealthValue {
   factory WorkoutHealthValue.fromJson(json) {
     return WorkoutHealthValue(
         HealthWorkoutActivityType.values.firstWhere(
-            (element) => element.name == json['workoutActivityType']),
+            (element) => element.name == json['workoutActivityType'],
+            orElse: () => HealthWorkoutActivityType.OTHER),
         json['totalEnergyBurned'] != null
             ? (json['totalEnergyBurned'] as num).toInt()
             : null,
         json['totalEnergyBurnedUnit'] != null
             ? HealthDataUnit.values.firstWhere(
-                (element) => element.name == json['totalEnergyBurnedUnit'])
+                (element) => element.name == json['totalEnergyBurnedUnit'],
+                orElse: () => HealthDataUnit.UNKNOWN_UNIT)
             : null,
         json['totalDistance'] != null
             ? (json['totalDistance'] as num).toInt()
             : null,
         json['totalDistanceUnit'] != null
             ? HealthDataUnit.values.firstWhere(
-                (element) => element.name == json['totalDistanceUnit'])
+                (element) => element.name == json['totalDistanceUnit'],
+                orElse: () => HealthDataUnit.UNKNOWN_UNIT)
             : null);
   }
 
