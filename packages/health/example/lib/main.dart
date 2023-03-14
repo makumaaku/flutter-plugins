@@ -281,7 +281,7 @@ class _HealthAppState extends State<HealthApp> {
   }
 
   Future revokeAccess() async {
-    await health.revokePermissions();
+    await HealthFactory.revokePermissions([]);
   }
 
   Widget _contentFetchingData() {

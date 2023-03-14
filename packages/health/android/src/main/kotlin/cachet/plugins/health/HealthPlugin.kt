@@ -913,41 +913,6 @@ ActivityResultListener, Result, ActivityAware, FlutterPlugin {
     result?.success(isGranted)
   }
 
-//<<<<<<< HEAD
-//  private fun revokePermissions(call: MethodCall, result: Result) {
-//
-//    if (activity == null) {
-//      result.success(null)
-//      return
-//    }
-//
-//    val optionsToRegister = callToHealthTypes(call)
-//    mResult = result
-//
-//    Fitness.getConfigClient(activity!!,  GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister))
-//      .disableFit()
-//      .continueWithTask {
-//        // disableFitだけでは、requestAuthorizationがすでに権限要求済みの判定になり、再度権限要求ができない
-//        // disableFit成功後に revokeAccessを使用する
-//        // https://github.com/android/fit-samples/issues/28#issuecomment-557865949
-//        // TODO: 使用後にstatusCode 4のエラーが出る
-//        val signInOptions = GoogleSignInOptions.Builder()
-//          .addExtension(optionsToRegister)
-//          .build()
-//        GoogleSignIn.getClient(activity!!.applicationContext, signInOptions)
-//          .revokeAccess()
-//      }
-//      .addOnSuccessListener {
-//        Log.i("revoke:success","Disabled Google Fit")
-//      }
-//      .addOnFailureListener { e ->
-//        Log.w("revoke:failed","There was an error disabling Google Fit", e)
-//      }
-//
-//    // 成功/失敗のフラグを返すようにしても良い
-//    mResult?.success(null)
-//  }
-//
 //  /// Called when the "requestAuthorization" is invoked from Flutter
   /** 
    * Requests authorization for the HealthDataTypes 
