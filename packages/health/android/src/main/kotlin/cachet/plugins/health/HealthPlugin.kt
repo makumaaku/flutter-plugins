@@ -25,6 +25,7 @@ import com.google.android.gms.tasks.OnSuccessListener
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.embedding.engine.systemchannels.SettingsChannel.CHANNEL_NAME
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -37,12 +38,12 @@ import java.util.concurrent.*
 import java.util.concurrent.TimeUnit
 
 
-const val GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1111
-const val CHANNEL_NAME = "flutter_health"
-const val MMOLL_2_MGDL = 18.0 // 1 mmoll= 18 mgdl
+class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandler,
+ActivityResultListener, Result, ActivityAware, FlutterPlugin {
+  private  val GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1111
+  private  val CHANNEL_NAME = "flutter_health"
+  private  val MMOLL_2_MGDL = 18.0 // 1 mmoll= 18 mgdl
 
-class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandler, 
-ActivityResultListener, Result, ActivityAware, FlutterPlugin { 
   private var mResult: Result? = null
   private var handler: Handler? = null
   private var activity: Activity? = null
@@ -317,7 +318,7 @@ ActivityResultListener, Result, ActivityAware, FlutterPlugin {
     }
   }
 
-  /** 
+  /**
    * Delete records of the given type in the time range
    */
   private fun delete(call: MethodCall, result: Result) {
@@ -360,7 +361,7 @@ ActivityResultListener, Result, ActivityAware, FlutterPlugin {
     }
   }
 
-  /** 
+  /**
    * Save a Blood Pressure measurement with systolic and diastolic values
    */
   private fun writeBloodPressure(call: MethodCall, result: Result) {
@@ -417,7 +418,7 @@ ActivityResultListener, Result, ActivityAware, FlutterPlugin {
     }
   }
 
-  /** 
+  /**
    * Save a data type in Google Fit
    */
   private fun writeData(call: MethodCall, result: Result) {
@@ -914,8 +915,8 @@ ActivityResultListener, Result, ActivityAware, FlutterPlugin {
   }
 
 //  /// Called when the "requestAuthorization" is invoked from Flutter
-  /** 
-   * Requests authorization for the HealthDataTypes 
+  /**
+   * Requests authorization for the HealthDataTypes
    * with the the READ or READ_WRITE permission type.
    */
   private fun requestAuthorization(call: MethodCall, result: Result) {
@@ -943,10 +944,10 @@ ActivityResultListener, Result, ActivityAware, FlutterPlugin {
     }
   }
 
-  /** 
+  /**
    * Revokes access to Google Fit using the `disableFit`-method.
-   * 
-   * Note: Using the `revokeAccess` creates a bug on android 
+   *
+   * Note: Using the `revokeAccess` creates a bug on android
    * when trying to reapply for permissions afterwards, hence
    * `disableFit` was used.
    */
