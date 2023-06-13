@@ -359,6 +359,7 @@ class HealthFactory {
       DateTime startTime, DateTime endTime, List<HealthDataType> types) async {
     List<HealthDataPoint> dataPoints = [];
 
+    print('11111111111111111111111111');
     for (var type in types) {
       final result = await _prepareQuery(startTime, endTime, type);
       dataPoints.addAll(result);
@@ -376,6 +377,7 @@ class HealthFactory {
   Future<List<HealthDataPoint>> _prepareQuery(
       DateTime startTime, DateTime endTime, HealthDataType dataType) async {
     // Ask for device ID only once
+    print('222222222222222222222222222222$dataType');
     _deviceId ??= _platformType == PlatformType.ANDROID
         ? (await _deviceInfo.androidInfo).id
         : (await _deviceInfo.iosInfo).identifierForVendor;
@@ -385,25 +387,30 @@ class HealthFactory {
       throw HealthException(
           dataType, 'Not available on platform $_platformType');
     }
+    print('3333333333333333333333333333$dataType');
 
     // If BodyMassIndex is requested on Android, calculate this manually
     if (dataType == HealthDataType.BODY_MASS_INDEX &&
         _platformType == PlatformType.ANDROID) {
       return _computeAndroidBMI(startTime, endTime);
     }
+    print('4444444444444444444444444444444444$dataType');
     return await _dataQuery(startTime, endTime, dataType);
   }
 
   /// The main function for fetching health data
   Future<List<HealthDataPoint>> _dataQuery(
       DateTime startTime, DateTime endTime, HealthDataType dataType) async {
+    print('55555555555555555555555555555555555555555$dataType');
     final args = <String, dynamic>{
       'dataTypeKey': dataType.name,
       'dataUnitKey': _dataTypeToUnit[dataType]!.name,
       'startTime': startTime.millisecondsSinceEpoch,
       'endTime': endTime.millisecondsSinceEpoch
     };
+    print('666666666666666666666666666666666666$dataType');
     final fetchedDataPoints = await _channel.invokeMethod('getData', args);
+    print('7777777777777777777777777777777777777$dataType');
     if (fetchedDataPoints != null) {
       final mesg = <String, dynamic>{
         "dataType": dataType,
@@ -423,6 +430,7 @@ class HealthFactory {
   }
 
   static List<HealthDataPoint> _parse(Map<String, dynamic> message) {
+    print('88888888888888888888888888888');
     final dataType = message["dataType"];
     final dataPoints = message["dataPoints"];
     final device = message["deviceId"];
@@ -455,7 +463,7 @@ class HealthFactory {
         sourceName,
       );
     }).toList();
-
+    print('9999999999999999999999999999999999999');
     return list;
   }
 

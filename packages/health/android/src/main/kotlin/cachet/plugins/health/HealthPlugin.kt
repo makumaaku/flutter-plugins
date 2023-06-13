@@ -962,16 +962,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     } else { /// Permission already granted
       mResult?.success(true)
     }
-
-    val account2 =  GoogleSignIn.getLastSignedInAccount(context!!)
-
-    Log.i("requestAuthorization", "activity: $activity")
-    Log.i("requestAuthorization", "impliedScopes: ${optionsToRegister.impliedScopes}")
-    Log.i("requestAuthorization", "optionsToRegister: ${optionsToRegister.toString()}")
-    Log.i("requestAuthorization", "account: ${account.toString()}")
-    Log.i("requestAuthorization", "email: ${account?.email}")
-    Log.i("requestAuthorization", "email2: ${account2?.email}")
-
   }
 
   private fun getTotalStepsInInterval(call: MethodCall, result: Result) {
