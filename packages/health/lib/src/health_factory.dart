@@ -408,6 +408,10 @@ class HealthFactory {
       'endTime': endTime.millisecondsSinceEpoch
     };
     final fetchedDataPoints = await _channel.invokeMethod('getData', args);
+    // データの取得に失敗するとfalseが返却される..
+    if (fetchedDataPoints.runtimeType == bool) {
+      return [];
+    }
     if (fetchedDataPoints != null) {
       final mesg = <String, dynamic>{
         "dataType": dataType,
