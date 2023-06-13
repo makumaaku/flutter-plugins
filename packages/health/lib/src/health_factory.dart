@@ -411,8 +411,9 @@ class HealthFactory {
     print('666666666666666666666666666666666666$dataType');
     final fetchedDataPoints = await _channel.invokeMethod('getData', args);
     print('7777777777777777777777777777777777777$dataType');
-    print(fetchedDataPoints.runtimeType);
-    print(fetchedDataPoints);
+    if(fetchedDataPoints.runtimeType == bool){
+      return [];
+    }
     if (fetchedDataPoints != null) {
       final mesg = <String, dynamic>{
         "dataType": dataType,
