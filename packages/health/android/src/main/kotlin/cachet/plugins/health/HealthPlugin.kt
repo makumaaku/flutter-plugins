@@ -661,20 +661,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         // If fine location is enabled, read distance data
         if (ContextCompat.checkSelfPermission(
             context!!.applicationContext,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
           ) == PackageManager.PERMISSION_GRANTED
         ) {
-          // Request permission with distance data.
-          // Google Fit requires this when we query for distance data
-          // as it is restricted data
-          if (!GoogleSignIn.hasPermissions(googleSignInAccount, fitnessOptions)) {
-            GoogleSignIn.requestPermissions(
-              activity!!,
-              GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-              googleSignInAccount,
-              fitnessOptions
-            )
-          }
           readRequestBuilder.read(DataType.TYPE_DISTANCE_DELTA)
         }
         readRequest = readRequestBuilder.build()
@@ -689,7 +678,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             DataReadRequest.Builder()
               .read(dataType)
               .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-              .build()
+              .build(),
           )
           .addOnSuccessListener(threadPoolExecutor!!, dataHandler(dataType, field, result))
           .addOnFailureListener(errHandler(result, "There was an error getting the data!"))
