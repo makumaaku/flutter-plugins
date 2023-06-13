@@ -405,7 +405,7 @@ class _HealthAppState extends State<HealthApp> {
               IconButton(
                 icon: Icon(Icons.delete),
                 onPressed: () {
-                  HealthFactory.revokePermissions([HealthDataType.STEPS]);
+                  HealthFactory().revokePermissions();
                 },
               ),
               IconButton(

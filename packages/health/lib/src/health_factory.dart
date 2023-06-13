@@ -71,21 +71,17 @@ class HealthFactory {
   /// Revoke permissions obtained earlier.
   ///
   /// Not supported on iOS and method does nothing.
-  static Future<void> revokePermissions(List<HealthDataType> types,
-      {List<HealthDataAccess>? permissions}) async {
-    final mTypes = List<HealthDataType>.from(types, growable: true);
-    final mPermissions = permissions == null
-        ? List<int>.filled(types.length, HealthDataAccess.READ.index,
-            growable: true)
-        : permissions.map((permission) => permission.index).toList();
-
-    /// On Android, if BMI is requested, then also ask for weight and height
-    if (_platformType == PlatformType.ANDROID) _handleBMI(mTypes, mPermissions);
-
-    return await _channel.invokeMethod('revokePermissions', {
-      "types": mTypes.map((type) => type.name).toList(),
-      "permissions": mPermissions,
-    });
+  Future<void> revokePermissions() async {
+    try {
+      if (_platformType == PlatformType.IOS) {
+        throw UnsupportedError(
+            'Revoke permissions is not supported on iOS. Please revoke permissions manually in the settings.');
+      }
+      await _channel.invokeMethod('revokePermissions');
+      return;
+    } catch (e) {
+      print(e);
+    }
   }
 
   /// Requests permissions to access data types in Apple Health or Google Fit.

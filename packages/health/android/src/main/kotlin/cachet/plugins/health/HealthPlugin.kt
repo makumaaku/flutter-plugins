@@ -916,36 +916,21 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
   }
 
   private fun revokePermissions(call: MethodCall, result: Result) {
-
-    if (activity == null) {
-      result.success(null)
+    if (context == null) {
+      result.success(false)
       return
     }
-
-    val optionsToRegister = callToHealthTypes(call)
     mResult = result
 
-    val account = GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
-    Log.i("revokePermissions","email:${account.email}")
-
-    Fitness.getConfigClient(activity!!, account)
+    Fitness.getConfigClient(activity!!, GoogleSignIn.getLastSignedInAccount(context!!)!!)
       .disableFit()
-      .continueWithTask {
-        // disableFitだけでは、requestAuthorizationがすでに権限要求済みの判定になり、再度権限要求ができない
-        // disableFit成功後に revokeAccessを使用する
-        // https://github.com/android/fit-samples/issues/28#issuecomment-557865949
-        // TODO: 使用後にstatusCode 4のエラーが出る
-        val signInOptions = GoogleSignInOptions.Builder()
-          .addExtension(optionsToRegister)
-          .build()
-        GoogleSignIn.getClient(activity!!.applicationContext, signInOptions)
-          .revokeAccess()
-      }
       .addOnSuccessListener {
-        Log.i("revoke:success","Disabled Google Fit")
+        Log.i("Health", "Disabled Google Fit")
+        result.success(true)
       }
       .addOnFailureListener { e ->
-        Log.w("revoke:failed","There was an error disabling Google Fit", e)
+        Log.w("Health", "There was an error disabling Google Fit", e)
+        result.success(false)
       }
 
     // 成功/失敗のフラグを返すようにしても良い
