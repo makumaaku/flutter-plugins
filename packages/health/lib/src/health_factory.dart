@@ -407,7 +407,7 @@ class HealthFactory {
       'startTime': startTime.millisecondsSinceEpoch,
       'endTime': endTime.millisecondsSinceEpoch
     };
-    final fetchedDataPoints = await _channel.invokeMethod('getData', args);
+    final fetchedDataPoints = await _channel.invokeMethod('getMfData', args);
     // データの取得に失敗するとfalseが返却される..
     if (fetchedDataPoints.runtimeType == bool) {
       return [];
