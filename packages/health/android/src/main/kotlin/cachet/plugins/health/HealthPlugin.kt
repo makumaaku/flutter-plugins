@@ -1123,7 +1123,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         result.success(isInstalled)
   }
 
-    private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result): Boolean {
+    private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result) {
     val fitnessOptions = FitnessOptions.builder()
        // 消費カロリー
       .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
@@ -1148,11 +1148,11 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
       .build()
 
-    val account = GoogleSignIn.getAccountForExtension(activity, fitnessOptions)
+    val account = GoogleSignIn.getAccountForExtension(activity!!, fitnessOptions)
      if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
          result.success(true)
     } else {
-      GoogleSignIn.requestPermissions(activity, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
+      GoogleSignIn.requestPermissions(activity!!, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
          result.success(false)
     }
   }
