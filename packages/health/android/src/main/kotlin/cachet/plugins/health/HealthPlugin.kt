@@ -922,9 +922,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     val optionsToRegister = callToHealthTypes(call)
     mResult = result
 
-    val account =
-      GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
-    Log.i("revokePermissions", "email:${account.email}")
+    val account = GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
+    Log.i("revokePermissions","email:${account.email}")
 
     Fitness.getConfigClient(activity!!, account)
       .disableFit()
@@ -940,10 +939,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
           .revokeAccess()
       }
       .addOnSuccessListener {
-        Log.i("revoke:success", "Disabled Google Fit")
+        Log.i("revoke:success","Disabled Google Fit")
       }
       .addOnFailureListener { e ->
-        Log.w("revoke:failed", "There was an error disabling Google Fit", e)
+        Log.w("revoke:failed","There was an error disabling Google Fit", e)
       }
 
     // 成功/失敗のフラグを返すようにしても良い
@@ -976,7 +975,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       mResult?.success(true)
     }
 
-    val account2 = GoogleSignIn.getLastSignedInAccount(context!!)
+    val account2 =  GoogleSignIn.getLastSignedInAccount(context!!)
 
     Log.i("requestAuthorization", "activity: $activity")
     Log.i("requestAuthorization", "impliedScopes: ${optionsToRegister.impliedScopes}")
@@ -1119,10 +1118,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
 
     try {
-      context!!.packageManager.getPackageInfo(
-        "com.google.android.apps.fitness",
-        PackageManager.GET_ACTIVITIES
-      )
+      context!!.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
       Log.i("checkIfFitInstalled", "Installed")
       result.success(true) // if package is found, return true
     } catch (e: PackageManager.NameNotFoundException) { // catch specific exception
@@ -1131,42 +1127,37 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
   }
 
-  //
-  private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result) {
-    if (activity == null) {
-      return
-    }
+    //
+    private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result) {
+      if(activity == null){
+        return
+      }
     val fitnessOptions = FitnessOptions.builder()
-      // 消費カロリー
+       // 消費カロリー
       .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
-      // 歩数
+       // 歩数
       .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-      // 心拍数
+       // 心拍数
       .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
-      // 体温
+       // 体温
       .addDataType(HealthDataTypes.TYPE_BODY_TEMPERATURE, FitnessOptions.ACCESS_READ)
-      // 最高血圧
+       // 最高血圧
       .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
-      // 最低血圧
+       // 最低血圧
       .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
-      // 酸素飽和度
+       // 酸素飽和度
       .addDataType(HealthDataTypes.TYPE_OXYGEN_SATURATION, FitnessOptions.ACCESS_READ)
-      // 血糖値
+       // 血糖値
       .addDataType(HealthDataTypes.TYPE_BLOOD_GLUCOSE, FitnessOptions.ACCESS_READ)
-      // 睡眠
+        // 睡眠
       .addDataType(DataType.TYPE_SLEEP_SEGMENT, FitnessOptions.ACCESS_READ)
-      .accessSleepSessions(FitnessOptions.ACCESS_READ)
-      // ワークアウト
-      .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
+        .accessSleepSessions(FitnessOptions.ACCESS_READ)
+        // ワークアウト
+        .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
       .build()
 
     val account = GoogleSignIn.getAccountForExtension(activity!!, fitnessOptions)
-    GoogleSignIn.requestPermissions(
-      activity!!,
-      GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-      account,
-      fitnessOptions
-    )
+      GoogleSignIn.requestPermissions(activity!!, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
   }
 
   private fun hasMfPermissions(call: MethodCall, result: Result) {
@@ -1228,7 +1219,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     } else if (dataType == DataType.TYPE_ACTIVITY_SEGMENT) {
       typesBuilder.accessActivitySessions(FitnessOptions.ACCESS_READ)
         .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
-        .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
+//        .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
     }
     val fitnessOptions = typesBuilder.build()
     val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(context!!)
@@ -1259,35 +1250,43 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
           .read(DataType.TYPE_CALORIES_EXPENDED)
 
         // If fine location is enabled, read distance data
-        if (ContextCompat.checkSelfPermission(
-            context!!.applicationContext,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-          ) == PackageManager.PERMISSION_GRANTED
-        ) {
-          readRequest = readRequestBuilder.build()
-          Fitness.getSessionsClient(context!!.applicationContext, googleSignInAccount)
-            .readSession(readRequest)
-            .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
-            .addOnFailureListener(
-              errHandler(
-                result,
-                "There was an error getting the workout data!"
-              )
-            )
-        }
-        else -> {
-          Fitness.getHistoryClient(context!!.applicationContext, googleSignInAccount)
-            .readData(
-              DataReadRequest.Builder()
-                .read(dataType)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .build(),
-            )
-            .addOnSuccessListener(threadPoolExecutor!!, dataHandler(dataType, field, result))
-            .addOnFailureListener(errHandler(result, "There was an error getting the data!"))
-        }
+//        if (ContextCompat.checkSelfPermission(
+//            context!!.applicationContext,
+//            android.Manifest.permission.ACCESS_FINE_LOCATION
+//          ) == PackageManager.PERMISSION_GRANTED
+//        ) {
+          // Request permission with distance data.
+          // Google Fit requires this when we query for distance data
+          // as it is restricted data
+//          if (!GoogleSignIn.hasPermissions(googleSignInAccount, fitnessOptions)) {
+//            GoogleSignIn.requestPermissions(
+//              activity!!,
+//              GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+//              googleSignInAccount,
+//              fitnessOptions
+//            )
+//          }
+//          readRequestBuilder.read(DataType.TYPE_DISTANCE_DELTA)
+//        }
+
+        readRequest = readRequestBuilder.build()
+        Fitness.getSessionsClient(context!!.applicationContext, googleSignInAccount)
+          .readSession(readRequest)
+          .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
+          .addOnFailureListener(errHandler(result, "There was an error getting the workout data!"))
+      }
+      else -> {
+        Fitness.getHistoryClient(context!!.applicationContext, googleSignInAccount)
+          .readData(
+            DataReadRequest.Builder()
+              .read(dataType)
+              .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+              .build(),
+          )
+          .addOnSuccessListener(threadPoolExecutor!!, dataHandler(dataType, field, result))
+          .addOnFailureListener(errHandler(result, "There was an error getting the data!"))
       }
     }
   }
-}
 
+}
