@@ -1113,14 +1113,16 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
   }
 
     private fun checkIfFitInstalled(result: Result) {
-        val isInstalled: Boolean
+      if (context == null) {
+        result.success(false)
+        return
+      }
         try {
-            context.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
-            isInstalled = true
+           val isInstalled =  context.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
+          result.success(isInstalled)
         } catch (e: Exception) {
-            isInstalled = false
+          result.success(false)
         }
-        result.success(isInstalled)
   }
 
     private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result) {
