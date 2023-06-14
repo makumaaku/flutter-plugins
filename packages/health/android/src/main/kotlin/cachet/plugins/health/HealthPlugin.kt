@@ -1112,21 +1112,24 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     activity = null
   }
 
-    private fun checkIfFitInstalled(result: Result) {
-      if (context == null) {
-        result.success(false)
-        Log.i("checkIfFitInstalled", "no context")
-        return
-      }
-        try {
-           val isInstalled =  context!!.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
-          Log.i("checkIfFitInstalled", "check Installed")
-        } catch (e: Exception) {
-          Log.i("checkIfFitInstalled", "has Exception")
-          result.success(false)
-        }
+  private fun checkIfFitInstalled(result: Result) {
+    if (context == null) {
+      result.success(false)
+      Log.i("checkIfFitInstalled", "no context")
+      return
+    }
+
+    try {
+      context!!.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
+      Log.i("checkIfFitInstalled", "Installed")
+      result.success(true) // if package is found, return true
+    } catch (e: PackageManager.NameNotFoundException) { // catch specific exception
+      Log.i("checkIfFitInstalled", "has Exception")
+      result.success(false)
+    }
   }
 
+    //
     private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result) {
       if(activity == null){
         return
@@ -1157,11 +1160,5 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     val account = GoogleSignIn.getAccountForExtension(activity!!, fitnessOptions)
       GoogleSignIn.requestPermissions(activity!!, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
-//     if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-//         result.success(true)
-//    } else {
-//     
-//         result.success(false)
-//    }
   }
 }
