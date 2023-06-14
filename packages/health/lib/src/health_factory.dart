@@ -762,4 +762,10 @@ class HealthFactory {
         await _channel.invokeMethod('checkGoogleSignInFitnessPermission');
     return success;
   }
+
+  Future<bool> hasMfPermissions() async {
+    final success =
+    await _channel.invokeMethod('hasMfPermissions');
+    return success;
+  }
 }
