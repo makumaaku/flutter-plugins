@@ -1115,12 +1115,15 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     private fun checkIfFitInstalled(result: Result) {
       if (context == null) {
         result.success(false)
+        Log.i("checkIfFitInstalled", "no context")
         return
       }
         try {
            val isInstalled =  context!!.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
+          Log.i("isInstalled", isInstalled.toString())
           result.success(isInstalled)
-        } catch (e: Exception) {
+        } catch (e: Exception) { 
+            Log.i("isInstalled Exception")
           result.success(false)
         }
   }
