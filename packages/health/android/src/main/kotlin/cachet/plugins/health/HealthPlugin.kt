@@ -1109,4 +1109,47 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
     activity = null
   }
+
+  fun checkIfFitInstalled(context: Context): Boolean {
+    return try {
+      context.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
+      true
+    } catch (e: Exception) {
+      false
+    }
+  }
+
+  fun checkGoogleSignInFitnessPermission(activity: Activity): Boolean {
+    val fitnessOptions = FitnessOptions.builder()
+       // 消費カロリー
+      .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
+       // 歩数
+      .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+       // 心拍数
+      .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
+       // 体温
+      .addDataType(HealthDataTypes.TYPE_BODY_TEMPERATURE, FitnessOptions.ACCESS_READ)
+       // 最高血圧
+      .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
+       // 最低血圧
+      .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
+       // 酸素飽和度
+      .addDataType(HealthDataTypes.TYPE_OXYGEN_SATURATION, FitnessOptions.ACCESS_READ)
+       // 血糖値
+      .addDataType(HealthDataTypes.TYPE_BLOOD_GLUCOSE, FitnessOptions.ACCESS_READ)
+        // 睡眠
+      .addDataType(DataType.TYPE_SLEEP_SEGMENT, FitnessOptions.ACCESS_READ)
+        .accessSleepSessions(FitnessOptions.ACCESS_READ)
+        // ワークアウト
+        .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
+      .build()
+
+    val account = GoogleSignIn.getAccountForExtension(activity, fitnessOptions)
+    return if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+      true
+    } else {
+      GoogleSignIn.requestPermissions(activity, PERMISSION_GOOGLE_ACCOUNT_SIGN_IN, account, fitnessOptions)
+      false
+    }
+  }
 }

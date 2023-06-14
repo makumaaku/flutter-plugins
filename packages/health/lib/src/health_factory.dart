@@ -751,4 +751,15 @@ class HealthFactory {
       HealthWorkoutActivityType.OTHER,
     }.contains(type);
   }
+
+  Future<bool> checkIfFitInstalled() async {
+    final success = await _channel.invokeMethod('checkIfFitInstalled');
+    return success;
+  }
+
+  Future<bool> requestMfPermissions() async {
+    final success =
+        await _channel.invokeMethod('checkGoogleSignInFitnessPermission');
+    return success;
+  }
 }
