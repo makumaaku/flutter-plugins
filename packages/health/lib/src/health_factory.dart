@@ -362,11 +362,13 @@ class HealthFactory {
   Future<List<HealthDataPoint>> getHealthDataFromTypes(
       DateTime startTime, DateTime endTime, List<HealthDataType> types) async {
     List<HealthDataPoint> dataPoints = [];
+    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
 
     for (var type in types) {
       final result = await _prepareQuery(startTime, endTime, type);
       dataPoints.addAll(result);
     }
+    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
 
     const int threshold = 100;
     if (dataPoints.length > threshold) {
@@ -379,6 +381,7 @@ class HealthFactory {
   /// Prepares a query, i.e. checks if the types are available, etc.
   Future<List<HealthDataPoint>> _prepareQuery(
       DateTime startTime, DateTime endTime, HealthDataType dataType) async {
+    print('00000000000000000000000000');
     // Ask for device ID only once
     _deviceId ??= _platformType == PlatformType.ANDROID
         ? (await _deviceInfo.androidInfo).id
