@@ -1148,7 +1148,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     return if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
       true
     } else {
-      GoogleSignIn.requestPermissions(activity, PERMISSION_GOOGLE_ACCOUNT_SIGN_IN, account, fitnessOptions)
+      GoogleSignIn.requestPermissions(activity, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
       false
     }
   }
