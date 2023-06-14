@@ -910,10 +910,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     )
 
     mResult?.success(isGranted)
-
-    val account = GoogleSignIn.getLastSignedInAccount(context!!)
-
-    Log.i("hasPermissions", "email: ${account?.email}")
   }
 
   private fun revokePermissions(call: MethodCall, result: Result) {
@@ -1085,6 +1081,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       "writeBloodPressure" -> writeBloodPressure(call, result)
       "checkIfFitInstalled" -> checkIfFitInstalled(result)
       "checkGoogleSignInFitnessPermission" -> checkGoogleSignInFitnessPermission(call, result)
+      "hasMfPermissions" -> hasMfPermissions(call, result)
       else -> result.notImplemented()
     }
   }
@@ -1160,5 +1157,43 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     val account = GoogleSignIn.getAccountForExtension(activity!!, fitnessOptions)
       GoogleSignIn.requestPermissions(activity!!, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
+  }
+
+  private fun hasMfPermissions(call: MethodCall, result: Result) {
+    if (context == null) {
+      result.success(false)
+      return
+    }
+
+    val fitnessOptions = FitnessOptions.builder()
+      // 消費カロリー
+      .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
+      // 歩数
+      .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+      // 心拍数
+      .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
+      // 体温
+      .addDataType(HealthDataTypes.TYPE_BODY_TEMPERATURE, FitnessOptions.ACCESS_READ)
+      // 最高血圧
+      .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
+      // 最低血圧
+      .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
+      // 酸素飽和度
+      .addDataType(HealthDataTypes.TYPE_OXYGEN_SATURATION, FitnessOptions.ACCESS_READ)
+      // 血糖値
+      .addDataType(HealthDataTypes.TYPE_BLOOD_GLUCOSE, FitnessOptions.ACCESS_READ)
+      // 睡眠
+      .addDataType(DataType.TYPE_SLEEP_SEGMENT, FitnessOptions.ACCESS_READ)
+      .accessSleepSessions(FitnessOptions.ACCESS_READ)
+      // ワークアウト
+      .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
+      .build()
+    
+    val isGranted = GoogleSignIn.hasPermissions(
+      GoogleSignIn.getLastSignedInAccount(context!!),
+      fitnessOptions
+    )
+
+    result.success(isGranted)
   }
 }
