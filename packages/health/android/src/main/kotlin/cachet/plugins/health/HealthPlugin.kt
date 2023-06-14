@@ -960,7 +960,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     mResult = result
 
     val isGranted = false
-    val account =  GoogleSignIn.getLastSignedInAccount(context!!)
+    val account = GoogleSignIn.getLastSignedInAccount(context!!)
 
     /// Not granted? Ask for permission
     if (!isGranted && activity != null) {
@@ -1222,7 +1222,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
     }
     val fitnessOptions = typesBuilder.build()
-    val googleSignInAccount: GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(context!!)
+    val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(context!!)
 //    val googleSignInAccount =
 //      GoogleSignIn.getAccountForExtension(context!!.applicationContext, fitnessOptions)
     // Handle data types
