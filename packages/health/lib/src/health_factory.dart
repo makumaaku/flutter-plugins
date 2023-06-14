@@ -444,6 +444,7 @@ class HealthFactory {
     final device = message["deviceId"];
     final unit = _dataTypeToUnit[dataType]!;
     print('66666666666666666666666666666');
+    print(dataPoints);
     final list = dataPoints.map<HealthDataPoint>((e) {
       // Handling different [HealthValue] types
       HealthValue value;
