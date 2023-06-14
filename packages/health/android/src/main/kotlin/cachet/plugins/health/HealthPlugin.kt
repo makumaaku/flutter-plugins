@@ -1083,6 +1083,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       "revokePermissions" -> revokePermissions(call, result)
       "writeWorkoutData" -> writeWorkoutData(call, result)
       "writeBloodPressure" -> writeBloodPressure(call, result)
+      "checkIfFitInstalled" -> checkIfFitInstalled(result)
+      "checkGoogleSignInFitnessPermission" -> checkGoogleSignInFitnessPermission(call, result)
       else -> result.notImplemented()
     }
   }
@@ -1110,16 +1112,18 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     activity = null
   }
 
-  fun checkIfFitInstalled(context: Context): Boolean {
-    return try {
-      context.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
-      true
-    } catch (e: Exception) {
-      false
-    }
+    private fun checkIfFitInstalled(result: Result) {
+        val isInstalled: Boolean
+        try {
+            context.packageManager.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES)
+            isInstalled = true
+        } catch (e: Exception) {
+            isInstalled = false
+        }
+        result.success(isInstalled)
   }
 
-  fun checkGoogleSignInFitnessPermission(activity: Activity): Boolean {
+    private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result): Boolean {
     val fitnessOptions = FitnessOptions.builder()
        // 消費カロリー
       .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
@@ -1145,11 +1149,11 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       .build()
 
     val account = GoogleSignIn.getAccountForExtension(activity, fitnessOptions)
-    return if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-      true
+     if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+         result.success(true)
     } else {
       GoogleSignIn.requestPermissions(activity, GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, account, fitnessOptions)
-      false
+         result.success(false)
     }
   }
 }
