@@ -840,25 +840,34 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
         Log.i("revokePermissions", "email:${account.email}")
 
-        Fitness.getConfigClient(activity!!, account)
+        Fitness.getConfigClient(activity!!,account)
             .disableFit()
-            .continueWithTask {
-                // disableFitだけでは、requestAuthorizationがすでに権限要求済みの判定になり、再度権限要求ができない
-                // disableFit成功後に revokeAccessを使用する
-                // https://github.com/android/fit-samples/issues/28#issuecomment-557865949
-                // TODO: 使用後にstatusCode 4のエラーが出る
-                val signInOptions = GoogleSignInOptions.Builder()
-                    .addExtension(optionsToRegister)
-                    .build()
-                GoogleSignIn.getClient(activity!!.applicationContext, signInOptions)
-                    .revokeAccess()
-            }
             .addOnSuccessListener {
-                Log.i("revoke:success", "Disabled Google Fit")
+                Log.i(TAG,"Disabled Google Fit")
             }
             .addOnFailureListener { e ->
-                Log.w("revoke:failed", "There was an error disabling Google Fit", e)
+                Log.w(TAG,"There was an error disabling Google Fit", e)
             }
+
+//        Fitness.getConfigClient(activity!!, account)
+//            .disableFit()
+//            .continueWithTask {
+//                // disableFitだけでは、requestAuthorizationがすでに権限要求済みの判定になり、再度権限要求ができない
+//                // disableFit成功後に revokeAccessを使用する
+//                // https://github.com/android/fit-samples/issues/28#issuecomment-557865949
+//                // TODO: 使用後にstatusCode 4のエラーが出る
+//                val signInOptions = GoogleSignInOptions.Builder()
+//                    .addExtension(optionsToRegister)
+//                    .build()
+//                GoogleSignIn.getClient(activity!!.applicationContext, signInOptions)
+//                    .revokeAccess()
+//            }
+//            .addOnSuccessListener {
+//                Log.i("revoke:success", "Disabled Google Fit")
+//            }
+//            .addOnFailureListener { e ->
+//                Log.w("revoke:failed", "There was an error disabling Google Fit", e)
+//            }
 
         // 成功/失敗のフラグを返すようにしても良い
         mResult?.success(null)
