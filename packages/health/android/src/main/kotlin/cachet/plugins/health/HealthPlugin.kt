@@ -843,10 +843,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         Fitness.getConfigClient(activity!!,account)
             .disableFit()
             .addOnSuccessListener {
-                Log.i(TAG,"Disabled Google Fit")
+                Log.i("revokePermissions","Disabled Google Fit")
             }
             .addOnFailureListener { e ->
-                Log.w(TAG,"There was an error disabling Google Fit", e)
+                Log.w("revokePermissions","There was an error disabling Google Fit", e)
             }
 
 //        Fitness.getConfigClient(activity!!, account)
