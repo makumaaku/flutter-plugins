@@ -831,54 +831,54 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     private fun revokePermissions(call: MethodCall, result: Result) {
         Log.i("revokePermissions", "start")
-        if (context == null) {
-            Log.i("revokePermissions", "context is null")
-            result.success(false)
-            return
-        }
-        val ac = activity
-        if(ac == null){
-            Log.i("revokePermissions", "activity is null")
-            result.success(false)
-            return
-        }
-        val account = GoogleSignIn.getLastSignedInAccount(context!!)
-        if(account == null){
-            Log.i("revokePermissions", "account")
-            result.success(false)
-            return
-        }
-        Log.i("revokePermissions", "start disableFit")
-
-        Fitness.getConfigClient(ac!!, account!!)
-            .disableFit()
-            .addOnSuccessListener {
-                Log.i("revokePermissions", "Disabled Google Fit")
-                result.success(true)
-            }
-            .addOnFailureListener { e ->
-                Log.w("revokePermissions", "There was an error disabling Google Fit", e)
-                result.success(false)
-            }
-//        if (activity == null) {
-//            result.success(null)
+//        if (context == null) {
+//            Log.i("revokePermissions", "context is null")
+//            result.success(false)
 //            return
 //        }
-//
-//        val optionsToRegister = callToHealthTypes(call)
-//        mResult = result
+//        val ac = activity
+//        if(ac == null){
+//            Log.i("revokePermissions", "activity is null")
+//            result.success(false)
+//            return
+//        }
 //        val account = GoogleSignIn.getLastSignedInAccount(context!!)
-//            ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
-//        Log.i("revokePermissions", "email:${account.email}")
+//        if(account == null){
+//            Log.i("revokePermissions", "account")
+//            result.success(false)
+//            return
+//        }
+//        Log.i("revokePermissions", "start disableFit")
 //
-//        Fitness.getConfigClient(activity!!,account)
+//        Fitness.getConfigClient(ac!!, account!!)
 //            .disableFit()
 //            .addOnSuccessListener {
-//                Log.i("revokePermissions","Disabled Google Fit")
+//                Log.i("revokePermissions", "Disabled Google Fit")
+//                result.success(true)
 //            }
 //            .addOnFailureListener { e ->
-//                Log.w("revokePermissions","There was an error disabling Google Fit", e)
+//                Log.w("revokePermissions", "There was an error disabling Google Fit", e)
+//                result.success(false)
 //            }
+        if (activity == null) {
+            result.success(null)
+            return
+        }
+
+        val optionsToRegister = callToHealthTypes(call)
+        mResult = result
+        val account = GoogleSignIn.getLastSignedInAccount(context!!)
+            ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
+        Log.i("revokePermissions", "email:${account.email}")
+
+        Fitness.getConfigClient(activity!!,account)
+            .disableFit()
+            .addOnSuccessListener {
+                Log.i("revokePermissions","Disabled Google Fit")
+            }
+            .addOnFailureListener { e ->
+                Log.w("revokePermissions","There was an error disabling Google Fit", e)
+            }
 
 //        Fitness.getConfigClient(activity!!, account)
 //            .disableFit()
