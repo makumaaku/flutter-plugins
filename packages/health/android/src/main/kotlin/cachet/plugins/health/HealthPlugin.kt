@@ -828,26 +828,41 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         mResult?.success(isGranted)
     }
 
+
     private fun revokePermissions(call: MethodCall, result: Result) {
-        if (activity == null) {
-            result.success(null)
+        if (context == null) {
+            result.success(false)
             return
         }
-
-        val optionsToRegister = callToHealthTypes(call)
-        mResult = result
-        val account = GoogleSignIn.getLastSignedInAccount(context!!)
-            ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
-        Log.i("revokePermissions", "email:${account.email}")
-
-        Fitness.getConfigClient(activity!!,account)
+        Fitness.getConfigClient(activity!!, GoogleSignIn.getLastSignedInAccount(context!!)!!)
             .disableFit()
             .addOnSuccessListener {
-                Log.i("revokePermissions","Disabled Google Fit")
+                Log.i("revokePermissions", "Disabled Google Fit")
+                result.success(true)
             }
             .addOnFailureListener { e ->
-                Log.w("revokePermissions","There was an error disabling Google Fit", e)
+                Log.w("revokePermissions", "There was an error disabling Google Fit", e)
+                result.success(false)
             }
+//        if (activity == null) {
+//            result.success(null)
+//            return
+//        }
+//
+//        val optionsToRegister = callToHealthTypes(call)
+//        mResult = result
+//        val account = GoogleSignIn.getLastSignedInAccount(context!!)
+//            ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
+//        Log.i("revokePermissions", "email:${account.email}")
+//
+//        Fitness.getConfigClient(activity!!,account)
+//            .disableFit()
+//            .addOnSuccessListener {
+//                Log.i("revokePermissions","Disabled Google Fit")
+//            }
+//            .addOnFailureListener { e ->
+//                Log.w("revokePermissions","There was an error disabling Google Fit", e)
+//            }
 
 //        Fitness.getConfigClient(activity!!, account)
 //            .disableFit()
