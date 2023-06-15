@@ -830,6 +830,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
 
     private fun revokePermissions(call: MethodCall, result: Result) {
+        Log.i("revokePermissions", "start")
         if (context == null) {
             Log.i("revokePermissions", "context is null")
             result.success(false)
@@ -847,7 +848,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             result.success(false)
             return
         }
-
+        Log.i("revokePermissions", "start disableFit")
 
         Fitness.getConfigClient(ac!!, account!!)
             .disableFit()

@@ -82,6 +82,7 @@ class HealthFactory {
     /// On Android, if BMI is requested, then also ask for weight and height
     if (_platformType == PlatformType.ANDROID) _handleBMI(mTypes, mPermissions);
 
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
     return await _channel.invokeMethod('revokePermissions', {
       "types": mTypes.map((type) => type.name).toList(),
       "permissions": mPermissions,
