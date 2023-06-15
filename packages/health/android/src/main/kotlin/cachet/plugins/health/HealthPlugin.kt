@@ -831,10 +831,25 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     private fun revokePermissions(call: MethodCall, result: Result) {
         if (context == null) {
+            Log.i("revokePermissions", "context is null")
             result.success(false)
             return
         }
-        Fitness.getConfigClient(activity!!, GoogleSignIn.getLastSignedInAccount(context!!)!!)
+        val ac = activity
+        if(ac == null){
+            Log.i("revokePermissions", "activity is null")
+            result.success(false)
+            return
+        }
+        val account = GoogleSignIn.getLastSignedInAccount(context!!)
+        if(account == null){
+            Log.i("revokePermissions", "account")
+            result.success(false)
+            return
+        }
+
+
+        Fitness.getConfigClient(ac!!, account!!)
             .disableFit()
             .addOnSuccessListener {
                 Log.i("revokePermissions", "Disabled Google Fit")
