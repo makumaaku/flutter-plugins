@@ -362,13 +362,11 @@ class HealthFactory {
   Future<List<HealthDataPoint>> getHealthDataFromTypes(
       DateTime startTime, DateTime endTime, List<HealthDataType> types) async {
     List<HealthDataPoint> dataPoints = [];
-    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
 
     for (var type in types) {
       final result = await _prepareQuery(startTime, endTime, type);
       dataPoints.addAll(result);
     }
-    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
 
     const int threshold = 100;
     if (dataPoints.length > threshold) {
@@ -381,7 +379,6 @@ class HealthFactory {
   /// Prepares a query, i.e. checks if the types are available, etc.
   Future<List<HealthDataPoint>> _prepareQuery(
       DateTime startTime, DateTime endTime, HealthDataType dataType) async {
-    print('00000000000000000000000000');
     // Ask for device ID only once
     _deviceId ??= _platformType == PlatformType.ANDROID
         ? (await _deviceInfo.androidInfo).id
@@ -404,22 +401,18 @@ class HealthFactory {
   /// The main function for fetching health data
   Future<List<HealthDataPoint>> _dataQuery(
       DateTime startTime, DateTime endTime, HealthDataType dataType) async {
-    print('1111111111111111111111');
     final args = <String, dynamic>{
       'dataTypeKey': dataType.name,
       'dataUnitKey': _dataTypeToUnit[dataType]!.name,
       'startTime': startTime.millisecondsSinceEpoch,
       'endTime': endTime.millisecondsSinceEpoch
     };
-    print('222222222222222222222222');
     final fetchedDataPoints = await _channel.invokeMethod('getMfData', args);
-    print('3333333333333333333');
     // データの取得に失敗するとfalseが返却される..
     if (fetchedDataPoints.runtimeType == bool) {
       return [];
     }
     if (fetchedDataPoints != null) {
-      print('444444444444444444444');
       final mesg = <String, dynamic>{
         "dataType": dataType,
         "dataPoints": fetchedDataPoints,
@@ -429,7 +422,6 @@ class HealthFactory {
       // If the no. of data points are larger than the threshold,
       // call the compute method to spawn an Isolate to do the parsing in a separate thread.
       if (fetchedDataPoints.length > thresHold) {
-        print('5555555555555555555555');
         return compute(_parse, mesg);
       }
       return _parse(mesg);
@@ -443,8 +435,6 @@ class HealthFactory {
     final dataPoints = message["dataPoints"];
     final device = message["deviceId"];
     final unit = _dataTypeToUnit[dataType]!;
-    print('66666666666666666666666666666');
-    print(dataPoints);
     final list = dataPoints.map<HealthDataPoint>((e) {
       // Handling different [HealthValue] types
       HealthValue value;
@@ -473,8 +463,6 @@ class HealthFactory {
         sourceName,
       );
     }).toList();
-    print('777777777777777777777777777777');
-
     return list;
   }
 
