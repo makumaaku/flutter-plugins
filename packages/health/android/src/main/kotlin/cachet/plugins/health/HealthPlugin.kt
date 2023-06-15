@@ -830,36 +830,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
 
     private fun revokePermissions(call: MethodCall, result: Result) {
-        Log.i("revokePermissions", "start")
-//        if (context == null) {
-//            Log.i("revokePermissions", "context is null")
-//            result.success(false)
-//            return
-//        }
-//        val ac = activity
-//        if(ac == null){
-//            Log.i("revokePermissions", "activity is null")
-//            result.success(false)
-//            return
-//        }
-//        val account = GoogleSignIn.getLastSignedInAccount(context!!)
-//        if(account == null){
-//            Log.i("revokePermissions", "account")
-//            result.success(false)
-//            return
-//        }
-//        Log.i("revokePermissions", "start disableFit")
-//
-//        Fitness.getConfigClient(ac!!, account!!)
-//            .disableFit()
-//            .addOnSuccessListener {
-//                Log.i("revokePermissions", "Disabled Google Fit")
-//                result.success(true)
-//            }
-//            .addOnFailureListener { e ->
-//                Log.w("revokePermissions", "There was an error disabling Google Fit", e)
-//                result.success(false)
-//            }
         if (activity == null) {
             result.success(null)
             return
@@ -869,8 +839,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         mResult = result
         val account = GoogleSignIn.getLastSignedInAccount(context!!)
             ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
-        Log.i("revokePermissions", "email:${account.email}")
-
+        Log.i("revokePermissions","Start disableFit")
         Fitness.getConfigClient(activity!!,account)
             .disableFit()
             .addOnSuccessListener {
@@ -879,27 +848,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             .addOnFailureListener { e ->
                 Log.w("revokePermissions","There was an error disabling Google Fit", e)
             }
-
-//        Fitness.getConfigClient(activity!!, account)
-//            .disableFit()
-//            .continueWithTask {
-//                // disableFitだけでは、requestAuthorizationがすでに権限要求済みの判定になり、再度権限要求ができない
-//                // disableFit成功後に revokeAccessを使用する
-//                // https://github.com/android/fit-samples/issues/28#issuecomment-557865949
-//                // TODO: 使用後にstatusCode 4のエラーが出る
-//                val signInOptions = GoogleSignInOptions.Builder()
-//                    .addExtension(optionsToRegister)
-//                    .build()
-//                GoogleSignIn.getClient(activity!!.applicationContext, signInOptions)
-//                    .revokeAccess()
-//            }
-//            .addOnSuccessListener {
-//                Log.i("revoke:success", "Disabled Google Fit")
-//            }
-//            .addOnFailureListener { e ->
-//                Log.w("revoke:failed", "There was an error disabling Google Fit", e)
-//            }
-
         // 成功/失敗のフラグを返すようにしても良い
         mResult?.success(null)
     }
