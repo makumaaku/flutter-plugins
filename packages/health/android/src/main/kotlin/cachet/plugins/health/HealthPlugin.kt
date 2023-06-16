@@ -855,6 +855,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     /// Called when the "requestAuthorization" is invoked from Flutter
     private fun requestAuthorization(call: MethodCall, result: Result) {
         if (context == null) {
+            Log.i("requestAuthorization", "context is null")
             result.success(false)
             return
         }
@@ -876,17 +877,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             Log.i("requestAuthorization", "Finish requestPermissions")
         } else { /// Permission already granted
             mResult?.success(true)
+            Log.i("requestAuthorization", "Permission already granted")
         }
-
-        val account2 = GoogleSignIn.getLastSignedInAccount(context!!)
-
-        Log.i("requestAuthorization", "activity: $activity")
-        Log.i("requestAuthorization", "impliedScopes: ${optionsToRegister.impliedScopes}")
-        Log.i("requestAuthorization", "optionsToRegister: ${optionsToRegister.toString()}")
-        Log.i("requestAuthorization", "account: ${account.toString()}")
-        Log.i("requestAuthorization", "email: ${account?.email}")
-        Log.i("requestAuthorization", "email2: ${account2?.email}")
-
     }
 
     private fun getTotalStepsInInterval(call: MethodCall, result: Result) {
