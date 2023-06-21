@@ -81,8 +81,6 @@ class HealthFactory {
 
     /// On Android, if BMI is requested, then also ask for weight and height
     if (_platformType == PlatformType.ANDROID) _handleBMI(mTypes, mPermissions);
-
-    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
     return await _channel.invokeMethod('revokePermissions', {
       "types": mTypes.map((type) => type.name).toList(),
       "permissions": mPermissions,
@@ -365,6 +363,7 @@ class HealthFactory {
     List<HealthDataPoint> dataPoints = [];
 
     for (var type in types) {
+      log('Data Type: $type');
       final result = await _prepareQuery(startTime, endTime, type);
       dataPoints.addAll(result);
     }
@@ -764,8 +763,7 @@ class HealthFactory {
   }
 
   Future<bool> hasMfPermissions() async {
-    final success =
-    await _channel.invokeMethod('hasMfPermissions');
+    final success = await _channel.invokeMethod('hasMfPermissions');
     return success;
   }
 }

@@ -1105,6 +1105,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     private fun getData(call: MethodCall, result: Result) {
         if (context == null) {
+            Log.i("getData", "no context")
             result.success(null)
             return
         }
@@ -1126,11 +1127,13 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
         }
         val fitnessOptions = typesBuilder.build()
+        Log.i("getData", "Get Google Sign In Account")
         val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(context!!)
             ?: GoogleSignIn.getAccountForExtension(context!!.applicationContext, fitnessOptions)
         // Handle data types
         when (dataType) {
             DataType.TYPE_SLEEP_SEGMENT -> {
+                Log.i("getData", "TYPE_SLEEP_SEGMENT")
                 // request to the sessions for sleep data
                 val request = SessionReadRequest.Builder()
                     .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
@@ -1149,6 +1152,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     )
             }
             DataType.TYPE_ACTIVITY_SEGMENT -> {
+                Log.i("getData", "TYPE_ACTIVITY_SEGMENT")
                 val readRequest: SessionReadRequest
                 val readRequestBuilder = SessionReadRequest.Builder()
                     .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
@@ -1170,6 +1174,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     )
             }
             else -> {
+                Log.i("getData", "TYPE_OTHER_SEGMENT")
                 Fitness.getHistoryClient(context!!.applicationContext, googleSignInAccount)
                     .readData(
                         DataReadRequest.Builder()
