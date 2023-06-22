@@ -854,26 +854,26 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
 
     private fun revokePermissions(call: MethodCall, result: Result) {
-        if (activity == null) {
+        val ac = activity
+        if (ac == null) {
             result.success(null)
             return
         }
 
         val optionsToRegister = callToHealthTypes(call)
-        mResult = result
-        val account = GoogleSignIn.getLastSignedInAccount(context!!)
-            ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
+        val account = GoogleSignIn.getAccountForExtension(ac.applicationContext, optionsToRegister)
         Log.i("revokePermissions", "Start disableFit")
-        Fitness.getConfigClient(activity!!, account)
+        Fitness.getConfigClient(ac, account)
             .disableFit()
             .addOnSuccessListener {
                 Log.i("revokePermissions", "Disabled Google Fit")
+                googleSignInAccount = account
+                result.success(true)
             }
             .addOnFailureListener { e ->
                 Log.w("revokePermissions", "There was an error disabling Google Fit", e)
+                result.success(false)
             }
-        // 成功/失敗のフラグを返すようにしても良い
-        mResult?.success(null)
     }
 
     /// Called when the "requestAuthorization" is invoked from Flutter
