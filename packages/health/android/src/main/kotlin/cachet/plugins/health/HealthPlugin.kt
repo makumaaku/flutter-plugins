@@ -13,14 +13,15 @@ import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessActivities
 import com.google.android.gms.fitness.FitnessOptions
 import com.google.android.gms.fitness.data.*
-import com.google.android.gms.fitness.request.DataReadRequest
 import com.google.android.gms.fitness.request.DataDeleteRequest
+import com.google.android.gms.fitness.request.DataReadRequest
 import com.google.android.gms.fitness.request.SessionInsertRequest
 import com.google.android.gms.fitness.request.SessionReadRequest
 import com.google.android.gms.fitness.result.DataReadResponse
 import com.google.android.gms.fitness.result.SessionReadResponse
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import io.flutter.BuildConfig
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -33,7 +34,6 @@ import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.util.*
 import java.util.concurrent.*
-import java.util.concurrent.TimeUnit
 
 class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandler,
     ActivityResultListener, Result, ActivityAware, FlutterPlugin {
@@ -875,8 +875,30 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             return
         }
 
+        val packageName = c.packageName
+        Log.i("requestAuthorization", "PackageName $packageName")
+
+
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
+        val requestedScopes = account.requestedScopes
+        Log.i("requestAuthorization", "requestedScopes $requestedScopes")
+        val grantedScopes = account.grantedScopes
+        Log.i("requestAuthorization", "grantedScopes $grantedScopes")
+        val isExpired = account.isExpired
+        Log.i("requestAuthorization", "isExpired $isExpired")
+        val idToken = account.idToken
+        Log.i("requestAuthorization", "idToken $idToken")
+        val email = account.email
+        Log.i("requestAuthorization", "email $email")
+        val serverAuthCode = account.serverAuthCode
+        Log.i("requestAuthorization", "serverAuthCode $serverAuthCode")
+        val zac = account.zac()
+        Log.i("requestAuthorization", "zac $zac")
+        val zad = account.zad()
+        Log.i("requestAuthorization", "zad $zad")
+
+
         GoogleSignIn.requestPermissions(
             act,
             GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
