@@ -841,6 +841,18 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(ac.applicationContext, optionsToRegister)
+        val isExpired = account.isExpired
+        Log.i("revokePermissions", "isExpired $isExpired")
+        val idToken = account.idToken
+        Log.i("revokePermissions", "idToken $idToken")
+        val serverAuthCode = account.serverAuthCode
+        Log.i("revokePermissions", "serverAuthCode $serverAuthCode")
+        val zac = account.zac()
+        Log.i("revokePermissions", "zac $zac")
+        val zad = account.zad()
+        Log.i("revokePermissions", "zad $zad")
+        val grantedScopes = account.grantedScopes
+        Log.i("revokePermissions", "grantedScopes $grantedScopes")
         Log.i("revokePermissions", "Start disableFit")
         Fitness.getConfigClient(ac, account)
             .disableFit()
