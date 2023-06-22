@@ -104,6 +104,13 @@ class HealthFactory {
   ///   As Apple HealthKit will not disclose if READ access has been granted for a data type due to privacy concern,
   ///   this method will return **true if the window asking for permission was showed to the user without errors**
   ///   if it is called on iOS with a READ or READ_WRITE access.
+
+  List<String> _generateKeysFromDataTypes(List<HealthDataType> types) {
+    final mTypes = List<HealthDataType>.from(types, growable: true);
+    List<String> keys = mTypes.map((e) => e.name).toList();
+    return keys;
+  }
+
   Future<bool> requestAuthorization(
     List<HealthDataType> types, {
     List<HealthDataAccess>? permissions,
@@ -134,7 +141,7 @@ class HealthFactory {
     // on Android, if BMI is requested, then also ask for weight and height
     if (_platformType == PlatformType.ANDROID) _handleBMI(mTypes, mPermissions);
 
-    List<String> keys = mTypes.map((e) => e.name).toList();
+    final keys = _generateKeysFromDataTypes(mTypes);
     final bool? isAuthorized = await _channel.invokeMethod(
         'requestAuthorization', {'types': keys, "permissions": mPermissions});
     return isAuthorized ?? false;
@@ -159,16 +166,30 @@ class HealthFactory {
 
   /// Calculate the BMI using the last observed height and weight values.
   Future<List<HealthDataPoint>> _computeAndroidBMI(
-      DateTime startTime, DateTime endTime) async {
-    List<HealthDataPoint> heights =
-        await _prepareQuery(startTime, endTime, HealthDataType.HEIGHT);
+    DateTime startTime,
+    DateTime endTime,
+    List<String> keys,
+    List<int> mPermissions,
+  ) async {
+    List<HealthDataPoint> heights = await _prepareQuery(
+      startTime,
+      endTime,
+      HealthDataType.HEIGHT,
+      keys,
+      mPermissions,
+    );
 
     if (heights.isEmpty) {
       return [];
     }
 
-    List<HealthDataPoint> weights =
-        await _prepareQuery(startTime, endTime, HealthDataType.WEIGHT);
+    List<HealthDataPoint> weights = await _prepareQuery(
+      startTime,
+      endTime,
+      HealthDataType.WEIGHT,
+      keys,
+      mPermissions,
+    );
 
     double h =
         (heights.last.value as NumericHealthValue).numericValue.toDouble();
@@ -362,9 +383,14 @@ class HealthFactory {
       DateTime startTime, DateTime endTime, List<HealthDataType> types) async {
     List<HealthDataPoint> dataPoints = [];
 
+    final keys = _generateKeysFromDataTypes(types);
+    final mPermissions = List<int>.filled(
+        types.length, HealthDataAccess.READ.index,
+        growable: true);
     for (var type in types) {
       log('Data Type: $type');
-      final result = await _prepareQuery(startTime, endTime, type);
+      final result =
+          await _prepareQuery(startTime, endTime, type, keys, mPermissions);
       dataPoints.addAll(result);
     }
 
@@ -378,7 +404,12 @@ class HealthFactory {
 
   /// Prepares a query, i.e. checks if the types are available, etc.
   Future<List<HealthDataPoint>> _prepareQuery(
-      DateTime startTime, DateTime endTime, HealthDataType dataType) async {
+    DateTime startTime,
+    DateTime endTime,
+    HealthDataType dataType,
+    List<String> keys,
+    List<int> mPermissions,
+  ) async {
     // Ask for device ID only once
     _deviceId ??= _platformType == PlatformType.ANDROID
         ? (await _deviceInfo.androidInfo).id
@@ -393,21 +424,28 @@ class HealthFactory {
     // If BodyMassIndex is requested on Android, calculate this manually
     if (dataType == HealthDataType.BODY_MASS_INDEX &&
         _platformType == PlatformType.ANDROID) {
-      return _computeAndroidBMI(startTime, endTime);
+      return _computeAndroidBMI(startTime, endTime, keys, mPermissions);
     }
-    return await _dataQuery(startTime, endTime, dataType);
+    return await _dataQuery(startTime, endTime, dataType, keys, mPermissions);
   }
 
   /// The main function for fetching health data
   Future<List<HealthDataPoint>> _dataQuery(
-      DateTime startTime, DateTime endTime, HealthDataType dataType) async {
+    DateTime startTime,
+    DateTime endTime,
+    HealthDataType dataType,
+    List<String> keys,
+    List<int> mPermissions,
+  ) async {
     final args = <String, dynamic>{
       'dataTypeKey': dataType.name,
       'dataUnitKey': _dataTypeToUnit[dataType]!.name,
       'startTime': startTime.millisecondsSinceEpoch,
-      'endTime': endTime.millisecondsSinceEpoch
+      'endTime': endTime.millisecondsSinceEpoch,
+      'types': keys,
+      "permissions": mPermissions,
     };
-    final fetchedDataPoints = await _channel.invokeMethod('getData', args);
+    final fetchedDataPoints = await _channel.invokeMethod('getMfData', args);
     // データの取得に失敗するとfalseが返却される..
     if (fetchedDataPoints.runtimeType == bool) {
       return [];

@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessActivities
@@ -49,6 +50,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     private var activity: Activity? = null
     private var context: Context? = null
     private var threadPoolExecutor: ExecutorService? = null
+
+    // ヘルスケアデータ取得用
+    private var googleSignInAccount: GoogleSignInAccount? = null
+    private var methodCall: MethodCall? = null
+    private var mResult: Result? = null
+
 
     private var BODY_FAT_PERCENTAGE = "BODY_FAT_PERCENTAGE"
     private var HEIGHT = "HEIGHT"
@@ -239,6 +246,25 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 Log.i("FLUTTER_HEALTH", "Access Granted!")
+                val c = context
+                val call = methodCall
+                val result = mResult
+                val account = googleSignInAccount
+
+                if (result == null) {
+                    Log.i("FLUTTER_HEALTH", "Result is null")
+                } else if (c == null) {
+                    Log.i("FLUTTER_HEALTH", "Context is null")
+                    mResult?.success(false)
+                } else if (call == null) {
+                    Log.i("FLUTTER_HEALTH", "MethodCall is null")
+                    mResult?.success(false)
+                } else if (account == null) {
+                    Log.i("FLUTTER_HEALTH", "GoogleSignInAccount  is null")
+                    mResult?.success(false)
+                } else {
+                    accessGoogleFit(call, result, c, account)
+                }
                 mResult?.success(true)
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 Log.i("FLUTTER_HEALTH", "Access Denied!")
@@ -247,8 +273,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         }
         return false
     }
-
-    private var mResult: Result? = null
 
     private fun keyToHealthDataType(type: String): DataType {
         return when (type) {
@@ -839,14 +863,14 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         mResult = result
         val account = GoogleSignIn.getLastSignedInAccount(context!!)
             ?: GoogleSignIn.getAccountForExtension(activity!!.applicationContext, optionsToRegister)
-        Log.i("revokePermissions","Start disableFit")
-        Fitness.getConfigClient(activity!!,account)
+        Log.i("revokePermissions", "Start disableFit")
+        Fitness.getConfigClient(activity!!, account)
             .disableFit()
             .addOnSuccessListener {
-                Log.i("revokePermissions","Disabled Google Fit")
+                Log.i("revokePermissions", "Disabled Google Fit")
             }
             .addOnFailureListener { e ->
-                Log.w("revokePermissions","There was an error disabling Google Fit", e)
+                Log.w("revokePermissions", "There was an error disabling Google Fit", e)
             }
         // 成功/失敗のフラグを返すようにしても良い
         mResult?.success(null)
@@ -854,22 +878,26 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     /// Called when the "requestAuthorization" is invoked from Flutter
     private fun requestAuthorization(call: MethodCall, result: Result) {
-        if (context == null) {
+        val c = context
+        val act = activity;
+        if (c == null) {
             Log.i("requestAuthorization", "context is null")
+            result.success(false)
+            return
+        } else if (act == null) {
+            Log.i("requestAuthorization", "Activity is null")
             result.success(false)
             return
         }
 
         val optionsToRegister = callToHealthTypes(call)
         mResult = result
-
-        val isGranted = false
-        val account = GoogleSignIn.getLastSignedInAccount(context!!)
+        val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
 
         /// Not granted? Ask for permission
-        if (!isGranted && activity != null) {
+        if (!GoogleSignIn.hasPermissions(account, optionsToRegister)) {
             GoogleSignIn.requestPermissions(
-                activity!!,
+                act,
                 GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
                 account,
                 optionsToRegister
@@ -980,6 +1008,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             "checkIfFitInstalled" -> checkIfFitInstalled(result)
             "checkGoogleSignInFitnessPermission" -> checkGoogleSignInFitnessPermission(call, result)
             "hasMfPermissions" -> hasMfPermissions(call, result)
+            "getMfData" -> getMfData(call, result)
             else -> result.notImplemented()
         }
     }
@@ -1176,6 +1205,129 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             else -> {
                 Log.i("getData", "TYPE_OTHER_SEGMENT")
                 Fitness.getHistoryClient(context!!.applicationContext, googleSignInAccount)
+                    .readData(
+                        DataReadRequest.Builder()
+                            .read(dataType)
+                            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                            .build(),
+                    )
+                    .addOnSuccessListener(
+                        threadPoolExecutor!!,
+                        dataHandler(dataType, field, result)
+                    )
+                    .addOnFailureListener(
+                        errHandler(
+                            result,
+                            "There was an error getting the data!"
+                        )
+                    )
+            }
+        }
+    }
+
+    private fun getMfData(call: MethodCall, result: Result) {
+        val c = context
+        val act = activity;
+        if (c == null) {
+            Log.i("requestAuthorization", "context is null")
+            result.success(false)
+            return
+        } else if (act == null) {
+            Log.i("requestAuthorization", "Activity is null")
+            result.success(false)
+            return
+        }
+
+        val optionsToRegister = callToHealthTypes(call)
+        val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
+        mResult = result
+        googleSignInAccount = account
+        methodCall = call
+
+        /// Not granted? Ask for permission
+        if (!GoogleSignIn.hasPermissions(account, optionsToRegister)) {
+            GoogleSignIn.requestPermissions(
+                act,
+                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                account,
+                optionsToRegister
+            )
+            Log.i("requestAuthorization", "Finish requestPermissions")
+        } else { /// Permission already granted
+            Log.i("requestAuthorization", "Permission already granted")
+            accessGoogleFit(call, result, c, account)
+        }
+    }
+
+    private fun accessGoogleFit(
+        call: MethodCall,
+        result: Result,
+        context: Context,
+        account: GoogleSignInAccount
+    ) {
+        val type = call.argument<String>("dataTypeKey")!!
+        val startTime = call.argument<Long>("startTime")!!
+        val endTime = call.argument<Long>("endTime")!!
+        // Look up data type and unit for the type key
+        val dataType = keyToHealthDataType(type)
+        val field = getField(type)
+        val typesBuilder = FitnessOptions.builder()
+        typesBuilder.addDataType(dataType)
+
+        // Add special cases for accessing workouts or sleep data.
+        if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
+            typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
+        } else if (dataType == DataType.TYPE_ACTIVITY_SEGMENT) {
+            typesBuilder.accessActivitySessions(FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
+        }
+        Log.i("accessGoogleFit", "Get Google Sign In Account")
+        // Handle data types
+        when (dataType) {
+            DataType.TYPE_SLEEP_SEGMENT -> {
+                Log.i("accessGoogleFit", "TYPE_SLEEP_SEGMENT")
+                // request to the sessions for sleep data
+                val request = SessionReadRequest.Builder()
+                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+                    .enableServerQueries()
+                    .readSessionsFromAllApps()
+                    .includeSleepSessions()
+                    .build()
+                Fitness.getSessionsClient(context.applicationContext, account)
+                    .readSession(request)
+                    .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type, result))
+                    .addOnFailureListener(
+                        errHandler(
+                            result,
+                            "There was an error getting the sleeping data!"
+                        )
+                    )
+            }
+            DataType.TYPE_ACTIVITY_SEGMENT -> {
+                Log.i("accessGoogleFit", "TYPE_ACTIVITY_SEGMENT")
+                val readRequest: SessionReadRequest
+                val readRequestBuilder = SessionReadRequest.Builder()
+                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+                    .enableServerQueries()
+                    .readSessionsFromAllApps()
+                    .includeActivitySessions()
+                    .read(dataType)
+                    .read(DataType.TYPE_CALORIES_EXPENDED)
+
+                readRequest = readRequestBuilder.build()
+                Fitness.getSessionsClient(context.applicationContext, account)
+                    .readSession(readRequest)
+                    .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
+                    .addOnFailureListener(
+                        errHandler(
+                            result,
+                            "There was an error getting the workout data!"
+                        )
+                    )
+            }
+            else -> {
+                Log.i("accessGoogleFit", "TYPE_OTHER_SEGMENT")
+                Fitness.getHistoryClient(context.applicationContext, account)
                     .readData(
                         DataReadRequest.Builder()
                             .read(dataType)
