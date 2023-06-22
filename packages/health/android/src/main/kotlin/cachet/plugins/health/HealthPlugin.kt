@@ -1319,7 +1319,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     .readSessionsFromAllApps()
                     .includeSleepSessions()
                     .build()
-                Fitness.getSessionsClient(context.applicationContext, account)
+                Fitness.getSessionsClient(context, account)
                     .readSession(request)
                     .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type, result))
                     .addOnFailureListener(
@@ -1342,7 +1342,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
                 readRequest = readRequestBuilder.build()
                 Log.i("accessGoogleFit", "getSessionsClient")
-                Fitness.getSessionsClient(context.applicationContext, account)
+                Fitness.getSessionsClient(context, account)
                     .readSession(readRequest)
                     .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
                     .addOnFailureListener(
