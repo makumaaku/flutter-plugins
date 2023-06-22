@@ -50,7 +50,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     // ヘルスケアデータ取得用
     private var googleSignInAccount: GoogleSignInAccount? = null
-    private var methodCall: MethodCall? = null
     private var mResult: Result? = null
 
 
@@ -241,28 +240,18 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                Log.i("FLUTTER_HEALTH", "Access Granted!")
-                mResult?.success(true)
-                val c = context
-                val call = methodCall
-                val result = mResult
-                val account = googleSignInAccount
-
-                if (result == null) {
-                    Log.i("FLUTTER_HEALTH", "Result is null")
-                } else if (c == null) {
-                    Log.i("FLUTTER_HEALTH", "Context is null")
-                } else if (call == null) {
-                    Log.i("FLUTTER_HEALTH", "MethodCall is null")
-                } else if (account == null) {
-                    Log.i("FLUTTER_HEALTH", "GoogleSignInAccount  is null")
-                } else {
-                    accessGoogleFit(call, result, c, account)
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    Log.i("FLUTTER_HEALTH", "Access Granted!")
+                    mResult?.success(true)
                 }
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                Log.i("FLUTTER_HEALTH", "Access Denied!")
-                mResult?.success(false)
+                Activity.RESULT_CANCELED -> {
+                    Log.i("FLUTTER_HEALTH", "Access Denied!")
+                    mResult?.success(false)
+                }
+                Activity.RESULT_FIRST_USER -> {
+                    Log.i("FLUTTER_HEALTH", "Activity.RESULT_FIRST_USER")
+                }
             }
         }
         return false
@@ -1226,7 +1215,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
-        methodCall = call
         googleSignInAccount = account
 
         /// Not granted? Ask for permission
