@@ -1281,7 +1281,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             Log.i("getMfData", "Last account:$j")
 
 
-            accessGoogleFit(call, result, c, lastAccount)
+            accessGoogleFit(call, result, c, account)
         }
     }
 
