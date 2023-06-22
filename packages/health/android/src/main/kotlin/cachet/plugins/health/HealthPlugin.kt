@@ -1228,28 +1228,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             Log.i("getMfData", "Finish requestPermissions")
         } else { /// Permission already granted
             Log.i("getMfData", "Permission already granted")
-            val a = account.grantedScopes
-            Log.i("getMfData", "grantedScopes:$a")
-            val b = account.idToken
-            Log.i("getMfData", "idToken:$b")
-            val cc = account.isExpired
-            Log.i("getMfData", "isExpired:$cc")
-            val d = account.requestedScopes
-            Log.i("getMfData", "requestedScopes:$d")
-            val e = account.account.toString()
-            Log.i("getMfData", "account:$e")
-
-            val lastAccount = GoogleSignIn.getLastSignedInAccount(c)!!
-            val f = lastAccount.grantedScopes
-            Log.i("getMfData", "Last grantedScopes:$f")
-            val g = lastAccount.idToken
-            Log.i("getMfData", "Last idToken:$g")
-            val h = lastAccount.isExpired
-            Log.i("getMfData", "Last isExpired:$h")
-            val i = lastAccount.requestedScopes
-            Log.i("getMfData", "Last requestedScopes:$i")
-            val j = lastAccount.account.toString()
-            Log.i("getMfData", "Last account:$j")
             accessGoogleFit(call, result, c, account)
         }
     }
