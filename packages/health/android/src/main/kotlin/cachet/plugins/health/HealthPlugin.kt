@@ -239,6 +239,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        Log.i("FLUTTER_HEALTH", "Request Code $requestCode")
         if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
             when (resultCode) {
                 Activity.RESULT_OK -> {

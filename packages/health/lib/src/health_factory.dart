@@ -144,6 +144,7 @@ class HealthFactory {
     final keys = _generateKeysFromDataTypes(mTypes);
     final bool? isAuthorized = await _channel.invokeMethod(
         'requestAuthorization', {'types': keys, "permissions": mPermissions});
+    log('health plugin isAuthorized:$isAuthorized');
     return isAuthorized ?? false;
   }
 
@@ -793,5 +794,4 @@ class HealthFactory {
     final success = await _channel.invokeMethod('checkIfFitInstalled');
     return success;
   }
-
 }
