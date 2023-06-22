@@ -1354,7 +1354,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             }
             else -> {
                 Log.i("accessGoogleFit", "TYPE_OTHER_SEGMENT")
-                Fitness.getHistoryClient(context.applicationContext, account)
+                Fitness.getHistoryClient(context, account)
                     .readData(
                         DataReadRequest.Builder()
                             .read(dataType)
