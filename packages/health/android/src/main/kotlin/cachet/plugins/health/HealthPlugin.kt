@@ -7,10 +7,8 @@ import android.content.pm.PackageManager
 import android.os.Handler
 import android.util.Log
 import androidx.annotation.NonNull
-import androidx.core.content.ContextCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessActivities
 import com.google.android.gms.fitness.FitnessOptions
@@ -33,7 +31,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
 import io.flutter.plugin.common.PluginRegistry.Registrar
-import java.security.Permission
 import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.TimeUnit
@@ -246,6 +243,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 Log.i("FLUTTER_HEALTH", "Access Granted!")
+                mResult?.success(true)
                 val c = context
                 val call = methodCall
                 val result = mResult
@@ -255,17 +253,13 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     Log.i("FLUTTER_HEALTH", "Result is null")
                 } else if (c == null) {
                     Log.i("FLUTTER_HEALTH", "Context is null")
-                    mResult?.success(false)
                 } else if (call == null) {
                     Log.i("FLUTTER_HEALTH", "MethodCall is null")
-                    mResult?.success(false)
                 } else if (account == null) {
                     Log.i("FLUTTER_HEALTH", "GoogleSignInAccount  is null")
-                    mResult?.success(false)
                 } else {
                     accessGoogleFit(call, result, c, account)
                 }
-                mResult?.success(true)
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 Log.i("FLUTTER_HEALTH", "Access Denied!")
                 mResult?.success(false)
@@ -834,22 +828,18 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         return typesBuilder.build()
     }
 
-    private fun hasPermissions(call: MethodCall, result: Result) {
-
-        if (context == null) {
-            result.success(false)
-            return
-        }
-
-        val optionsToRegister = callToHealthTypes(call)
+    private fun hasPermissions(call: MethodCall, result: Result): Boolean {
         mResult = result
-
-        val isGranted = GoogleSignIn.hasPermissions(
-            GoogleSignIn.getLastSignedInAccount(context!!),
-            optionsToRegister
-        )
-
-        mResult?.success(isGranted)
+        val c = context
+        if (c == null) {
+            result.error("no-context", "Contextがnullです", "")
+            return false
+        }
+        val optionsToRegister = callToHealthTypes(call)
+        val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
+        val hasPermissions = GoogleSignIn.hasPermissions(account, optionsToRegister)
+        val isExpired = account.isExpired
+        return hasPermissions && !isExpired
     }
 
 
@@ -878,8 +868,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     /// Called when the "requestAuthorization" is invoked from Flutter
     private fun requestAuthorization(call: MethodCall, result: Result) {
+        mResult = result
         val c = context
-        val act = activity;
+        val act = activity
         if (c == null) {
             Log.i("requestAuthorization", "context is null")
             result.success(false)
@@ -891,22 +882,13 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         }
 
         val optionsToRegister = callToHealthTypes(call)
-        mResult = result
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
-
-        /// Not granted? Ask for permission
-        if (!GoogleSignIn.hasPermissions(account, optionsToRegister)) {
-            GoogleSignIn.requestPermissions(
-                act,
-                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-                account,
-                optionsToRegister
-            )
-            Log.i("requestAuthorization", "Finish requestPermissions")
-        } else { /// Permission already granted
-            mResult?.success(true)
-            Log.i("requestAuthorization", "Permission already granted")
-        }
+        GoogleSignIn.requestPermissions(
+            act,
+            GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+            account,
+            optionsToRegister
+        )
     }
 
     private fun getTotalStepsInInterval(call: MethodCall, result: Result) {
@@ -996,9 +978,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     /// Handle calls from the MethodChannel
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
-            "hasPermissions" -> hasPermissions(call, result)
+            "hasPermissions" -> {
+                val hasAllPermissions = hasPermissions(call, result)
+                result.success(hasAllPermissions)
+            }
             "requestAuthorization" -> requestAuthorization(call, result)
-            "getData" -> getData(call, result)
+//            "getData" -> getData(call, result)
             "writeData" -> writeData(call, result)
             "delete" -> delete(call, result)
             "getTotalStepsInInterval" -> getTotalStepsInInterval(call, result)
@@ -1226,6 +1211,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
 
     private fun getMfData(call: MethodCall, result: Result) {
+        mResult = result
         val c = context
         val act = activity;
         if (c == null) {
@@ -1240,23 +1226,14 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
-        mResult = result
         methodCall = call
-        if (googleSignInAccount == null) {
-            googleSignInAccount = account
-        }
+        googleSignInAccount = account
 
         /// Not granted? Ask for permission
-        val hasPermissions = GoogleSignIn.hasPermissions(account, optionsToRegister)
-        val isExpired = account.isExpired
+        val hasPermissions = hasPermissions(call, result)
         Log.i("getMfData", "Has Permissions?: $hasPermissions")
-        if (!hasPermissions || isExpired) {
-            GoogleSignIn.requestPermissions(
-                act,
-                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-                account,
-                optionsToRegister
-            )
+        if (!hasPermissions) {
+            requestAuthorization(call, result)
             Log.i("getMfData", "Finish requestPermissions")
         } else { /// Permission already granted
             Log.i("getMfData", "Permission already granted")
@@ -1264,8 +1241,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             Log.i("getMfData", "grantedScopes:$a")
             val b = account.idToken
             Log.i("getMfData", "idToken:$b")
-            val isExpired = account.isExpired
-            Log.i("getMfData", "isExpired:$isExpired")
+            val cc = account.isExpired
+            Log.i("getMfData", "isExpired:$cc")
             val d = account.requestedScopes
             Log.i("getMfData", "requestedScopes:$d")
             val e = account.account.toString()
@@ -1282,8 +1259,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             Log.i("getMfData", "Last requestedScopes:$i")
             val j = lastAccount.account.toString()
             Log.i("getMfData", "Last account:$j")
-
-
             accessGoogleFit(call, result, c, account)
         }
     }
@@ -1344,7 +1319,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     .read(DataType.TYPE_CALORIES_EXPENDED)
 
                 readRequest = readRequestBuilder.build()
-                Log.i("accessGoogleFit", "getSessionsClient")
                 Fitness.getSessionsClient(context, account)
                     .readSession(readRequest)
                     .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
