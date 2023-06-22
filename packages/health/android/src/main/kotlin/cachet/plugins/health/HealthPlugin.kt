@@ -1245,7 +1245,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         methodCall = call
 
         /// Not granted? Ask for permission
-        if (!GoogleSignIn.hasPermissions(account, optionsToRegister)) {
+        val hasPermissions = GoogleSignIn.hasPermissions(account, optionsToRegister)
+        Log.i("getMfData", "Has Permissions?: $hasPermissions")
+        if (!hasPermissions) {
             GoogleSignIn.requestPermissions(
                 act,
                 GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
