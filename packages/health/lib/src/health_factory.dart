@@ -71,7 +71,7 @@ class HealthFactory {
   /// Revoke permissions obtained earlier.
   ///
   /// Not supported on iOS and method does nothing.
-  static Future<void> revokePermissions(List<HealthDataType> types,
+  static Future<bool?> revokePermissions(List<HealthDataType> types,
       {List<HealthDataAccess>? permissions}) async {
     final mTypes = List<HealthDataType>.from(types, growable: true);
     final mPermissions = permissions == null

@@ -1241,8 +1241,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
         mResult = result
-        googleSignInAccount = account
         methodCall = call
+        if (googleSignInAccount == null) {
+            googleSignInAccount = account
+        }
 
         /// Not granted? Ask for permission
         val hasPermissions = GoogleSignIn.hasPermissions(account, optionsToRegister)
