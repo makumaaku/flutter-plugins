@@ -827,9 +827,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         }
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
-        val hasPermissions = GoogleSignIn.hasPermissions(account, optionsToRegister)
-        val isExpired = account.isExpired
-        return hasPermissions && !isExpired
+        return GoogleSignIn.hasPermissions(account, optionsToRegister)
     }
 
 
