@@ -873,30 +873,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             return
         }
 
-        val packageName = c.packageName
-        Log.i("requestAuthorization", "PackageName $packageName")
-
-
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
-        val requestedScopes = account.requestedScopes
-        Log.i("requestAuthorization", "requestedScopes $requestedScopes")
-        val grantedScopes = account.grantedScopes
-        Log.i("requestAuthorization", "grantedScopes $grantedScopes")
-        val isExpired = account.isExpired
-        Log.i("requestAuthorization", "isExpired $isExpired")
-        val idToken = account.idToken
-        Log.i("requestAuthorization", "idToken $idToken")
-        val email = account.email
-        Log.i("requestAuthorization", "email $email")
-        val serverAuthCode = account.serverAuthCode
-        Log.i("requestAuthorization", "serverAuthCode $serverAuthCode")
-        val zac = account.zac()
-        Log.i("requestAuthorization", "zac $zac")
-        val zad = account.zad()
-        Log.i("requestAuthorization", "zad $zad")
-
-
         GoogleSignIn.requestPermissions(
             act,
             GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
@@ -1129,99 +1107,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
         result.success(isGranted)
     }
-
-//    private fun getData(call: MethodCall, result: Result) {
-//        if (context == null) {
-//            Log.i("getData", "no context")
-//            result.success(null)
-//            return
-//        }
-//
-//        val type = call.argument<String>("dataTypeKey")!!
-//        val startTime = call.argument<Long>("startTime")!!
-//        val endTime = call.argument<Long>("endTime")!!
-//        // Look up data type and unit for the type key
-//        val dataType = keyToHealthDataType(type)
-//        val field = getField(type)
-//        val typesBuilder = FitnessOptions.builder()
-//        typesBuilder.addDataType(dataType)
-//
-//        // Add special cases for accessing workouts or sleep data.
-//        if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
-//            typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
-//        } else if (dataType == DataType.TYPE_ACTIVITY_SEGMENT) {
-//            typesBuilder.accessActivitySessions(FitnessOptions.ACCESS_READ)
-//                .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
-//        }
-//        val fitnessOptions = typesBuilder.build()
-//        Log.i("getData", "Get Google Sign In Account")
-//        val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(context!!)
-//            ?: GoogleSignIn.getAccountForExtension(context!!.applicationContext, fitnessOptions)
-//        // Handle data types
-//        when (dataType) {
-//            DataType.TYPE_SLEEP_SEGMENT -> {
-//                Log.i("getData", "TYPE_SLEEP_SEGMENT")
-//                // request to the sessions for sleep data
-//                val request = SessionReadRequest.Builder()
-//                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-//                    .enableServerQueries()
-//                    .readSessionsFromAllApps()
-//                    .includeSleepSessions()
-//                    .build()
-//                Fitness.getSessionsClient(context!!.applicationContext, googleSignInAccount)
-//                    .readSession(request)
-//                    .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type, result))
-//                    .addOnFailureListener(
-//                        errHandler(
-//                            result,
-//                            "There was an error getting the sleeping data!"
-//                        )
-//                    )
-//            }
-//            DataType.TYPE_ACTIVITY_SEGMENT -> {
-//                Log.i("getData", "TYPE_ACTIVITY_SEGMENT")
-//                val readRequest: SessionReadRequest
-//                val readRequestBuilder = SessionReadRequest.Builder()
-//                    .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-//                    .enableServerQueries()
-//                    .readSessionsFromAllApps()
-//                    .includeActivitySessions()
-//                    .read(dataType)
-//                    .read(DataType.TYPE_CALORIES_EXPENDED)
-//
-//                readRequest = readRequestBuilder.build()
-//                Fitness.getSessionsClient(context!!.applicationContext, googleSignInAccount)
-//                    .readSession(readRequest)
-//                    .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
-//                    .addOnFailureListener(
-//                        errHandler(
-//                            result,
-//                            "There was an error getting the workout data!"
-//                        )
-//                    )
-//            }
-//            else -> {
-//                Log.i("getData", "TYPE_OTHER_SEGMENT")
-//                Fitness.getHistoryClient(context!!.applicationContext, googleSignInAccount)
-//                    .readData(
-//                        DataReadRequest.Builder()
-//                            .read(dataType)
-//                            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-//                            .build(),
-//                    )
-//                    .addOnSuccessListener(
-//                        threadPoolExecutor!!,
-//                        dataHandler(dataType, field, result)
-//                    )
-//                    .addOnFailureListener(
-//                        errHandler(
-//                            result,
-//                            "There was an error getting the data!"
-//                        )
-//                    )
-//            }
-//        }
-//    }
 
     private fun getMfData(call: MethodCall, result: Result) {
         mResult = result
