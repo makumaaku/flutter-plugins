@@ -336,9 +336,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             Handler(context!!.mainLooper).run { sendSuccess(healthData) }
         }
 
-    private fun errHandler(result: Result, addMessage: String) = OnFailureListener { exception ->
-        // Handler(context!!.mainLooper).run { result.success(null) }
-        Handler(context!!.mainLooper).run { sendSuccess(false) }
+    private fun errHandler(addMessage: String) = OnFailureListener { exception ->
+        Handler(context!!.mainLooper).run { sendError("get-data-failure", addMessage, exception) }
         Log.w("FLUTTER_HEALTH::ERROR", addMessage)
         Log.w("FLUTTER_HEALTH::ERROR", exception.message ?: "unknown error")
         Log.w("FLUTTER_HEALTH::ERROR", exception.stackTrace.toString())
@@ -609,7 +608,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 sendSuccess(hasPermission)
             }
             "requestAuthorization" -> requestAuthorization(call, result)
-            "getData" -> getMfData(call, result)
+            "getData" -> getData(call, result)
             "revokePermissions" -> revokePermissions(call, result)
             else -> result.notImplemented()
         }
@@ -638,7 +637,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         activity = null
     }
 
-    private fun getMfData(call: MethodCall, result: Result) {
+    private fun getData(call: MethodCall, result: Result) {
         mResult = result
         val c = context
         val act = activity;
@@ -657,12 +656,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
         /// Not granted? Ask for permission
         val hasPermissions = hasPermissions(call, result)
-        Log.i("getMfData", "Has Permissions?: $hasPermissions")
+        Log.i("getData", "Has Permissions?: $hasPermissions")
         if (!hasPermissions) {
             requestAuthorization(call, result)
-            Log.i("getMfData", "Finish requestPermissions")
+            Log.i("getData", "Finish requestPermissions")
         } else { /// Permission already granted
-            Log.i("getMfData", "Permission already granted")
+            Log.i("getData", "Permission already granted")
             accessGoogleFit(call, result, c, account)
         }
     }
@@ -706,7 +705,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type))
                     .addOnFailureListener(
                         errHandler(
-                            result,
                             "There was an error getting the sleeping data!"
                         )
                     )
@@ -728,7 +726,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
                     .addOnFailureListener(
                         errHandler(
-                            result,
                             "There was an error getting the workout data!"
                         )
                     )
@@ -748,7 +745,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     )
                     .addOnFailureListener(
                         errHandler(
-                            result,
                             "There was an error getting the data!"
                         )
                     )
