@@ -522,7 +522,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         mResult = result
         val c = context
         if (c == null) {
-            sendError("no-context", "Contextがnullです", "")
+            sendError("no-context", "Contextがnullです", "hasPermissions")
             return false
         }
         val optionsToRegister = callToHealthTypes(call)
@@ -535,7 +535,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         mResult = result
         val ac = activity
         if (ac == null) {
-            sendError("no-activity", "Activityがnullです", "")
+            sendError("no-activity", "Activityがnullです", "revokePermissions")
             return
         }
 
@@ -543,7 +543,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         val account = GoogleSignIn.getAccountForExtension(ac.applicationContext, optionsToRegister)
         val grantedScopes = account.grantedScopes
         if (grantedScopes.isEmpty()) {
-            sendError("no-granted-scopes", "GoogleFitと連携されていません", "")
+            sendError("no-granted-scopes", "GoogleFitと連携されていません", "revokePermissions")
             return
         }
         Log.i("revokePermissions", "Start disableFit")
@@ -570,7 +570,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     sendSuccess(true)
                 } else {
                     Log.w("revokePermissions", "There was an error disabling Google Fit", e)
-                    sendSuccess(false)
+                    sendError("disableFit-failed", "GoogleFitとの接続の解除に失敗しました", errorDetails = e)
                 }
             }
     }
