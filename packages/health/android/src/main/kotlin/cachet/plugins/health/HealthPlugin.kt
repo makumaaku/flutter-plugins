@@ -849,7 +849,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             .disableFit()
             .addOnSuccessListener {
                 Log.i("revokePermissions", "Disabled Google Fit")
-                googleSignInAccount = account
                 result.success(true)
             }
             .addOnFailureListener { e ->
