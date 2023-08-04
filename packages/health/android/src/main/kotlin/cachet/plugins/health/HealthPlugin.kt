@@ -3,7 +3,6 @@ package cachet.plugins.health
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Handler
 import android.util.Log
 import androidx.annotation.NonNull
@@ -51,7 +50,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     // ヘルスケアデータ取得用
     private var mResult: Result? = null
-
 
     private var BODY_FAT_PERCENTAGE = "BODY_FAT_PERCENTAGE"
     private var HEIGHT = "HEIGHT"
@@ -244,11 +242,11 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             when (resultCode) {
                 Activity.RESULT_OK -> {
                     Log.i("FLUTTER_HEALTH", "Access Granted!")
-                    mResult?.success(true)
+                    sendSuccess(true)
                 }
                 Activity.RESULT_CANCELED -> {
                     Log.i("FLUTTER_HEALTH", "Access Denied!")
-                    mResult?.success(false)
+                    sendSuccess(false)
                 }
                 Activity.RESULT_FIRST_USER -> {
                     Log.i("FLUTTER_HEALTH", "Activity.RESULT_FIRST_USER")
@@ -329,7 +327,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     // delete records of the given type in the time range
     private fun delete(call: MethodCall, result: Result) {
-
         if (context == null) {
             result.success(false)
             return
@@ -633,18 +630,18 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     "source_id" to dataPoint.originalDataSource.streamIdentifier
                 )
             }
-            Handler(context!!.mainLooper).run { result.success(healthData) }
+            Handler(context!!.mainLooper).run { sendSuccess(healthData) }
         }
 
     private fun errHandler(result: Result, addMessage: String) = OnFailureListener { exception ->
         // Handler(context!!.mainLooper).run { result.success(null) }
-        Handler(context!!.mainLooper).run { result.success(false) }
+        Handler(context!!.mainLooper).run { sendSuccess(false) }
         Log.w("FLUTTER_HEALTH::ERROR", addMessage)
         Log.w("FLUTTER_HEALTH::ERROR", exception.message ?: "unknown error")
         Log.w("FLUTTER_HEALTH::ERROR", exception.stackTrace.toString())
     }
 
-    private fun sleepDataHandler(type: String, result: Result) =
+    private fun sleepDataHandler(type: String) =
         OnSuccessListener { response: SessionReadResponse ->
             val healthData: MutableList<Map<String, Any?>> = mutableListOf()
             for (session in response.sessions) {
@@ -734,7 +731,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     }
                 }
             }
-            Handler(context!!.mainLooper).run { result.success(healthData) }
+            Handler(context!!.mainLooper).run { sendSuccess(healthData) }
         }
 
     private fun workoutDataHandler(type: String, result: Result) =
@@ -776,7 +773,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     )
                 )
             }
-            Handler(context!!.mainLooper).run { result.success(healthData) }
+            Handler(context!!.mainLooper).run { sendSuccess(healthData) }
         }
 
     private fun callToHealthTypes(call: MethodCall): FitnessOptions {
@@ -822,7 +819,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         mResult = result
         val c = context
         if (c == null) {
-            result.error("no-context", "Contextがnullです", "")
+            sendError("no-context", "Contextがnullです", "")
             return false
         }
         val optionsToRegister = callToHealthTypes(call)
@@ -832,9 +829,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
 
     private fun revokePermissions(call: MethodCall, result: Result) {
+        mResult = result
         val ac = activity
         if (ac == null) {
-            result.error("no-activity", "Activityがnullです", "")
+            sendError("no-activity", "Activityがnullです", "")
             return
         }
 
@@ -842,14 +840,15 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         val account = GoogleSignIn.getAccountForExtension(ac.applicationContext, optionsToRegister)
         val grantedScopes = account.grantedScopes
         if (grantedScopes.isEmpty()) {
-            result.error("no-granted-scopes", "GoogleFitと連携されていません", "")
+            sendError("no-granted-scopes", "GoogleFitと連携されていません", "")
+            return
         }
         Log.i("revokePermissions", "Start disableFit")
         Fitness.getConfigClient(ac, account)
             .disableFit()
             .addOnSuccessListener {
                 Log.i("revokePermissions", "Disabled Google Fit")
-                result.success(true)
+                sendSuccess(true)
             }
             .addOnFailureListener { e ->
                 if (e is ApiException && e.statusCode == 5010) {
@@ -865,10 +864,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                         .build()
                     GoogleSignIn.getClient(ac.applicationContext, signInOptions)
                         .revokeAccess()
-                    result.success(true)
+                    sendSuccess(true)
                 } else {
                     Log.w("revokePermissions", "There was an error disabling Google Fit", e)
-                    result.success(false)
+                    sendSuccess(false)
                 }
             }
     }
@@ -880,11 +879,11 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         val act = activity
         if (c == null) {
             Log.i("requestAuthorization", "context is null")
-            result.success(false)
+            sendSuccess(false)
             return
         } else if (act == null) {
             Log.i("requestAuthorization", "Activity is null")
-            result.success(false)
+            sendSuccess(false)
             return
         }
 
@@ -986,8 +985,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "hasPermissions" -> {
-                val hasAllPermissions = hasPermissions(call, result)
-                result.success(hasAllPermissions)
+                val hasPermission = hasPermissions(call, result)
+                sendSuccess(hasPermission)
             }
             "requestAuthorization" -> requestAuthorization(call, result)
             "getData" -> getMfData(call, result)
@@ -997,9 +996,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             "revokePermissions" -> revokePermissions(call, result)
             "writeWorkoutData" -> writeWorkoutData(call, result)
             "writeBloodPressure" -> writeBloodPressure(call, result)
-            "checkIfFitInstalled" -> checkIfFitInstalled(result)
-            "checkGoogleSignInFitnessPermission" -> checkGoogleSignInFitnessPermission(call, result)
-            "hasMfPermissions" -> hasMfPermissions(call, result)
             else -> result.notImplemented()
         }
     }
@@ -1025,102 +1021,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             return
         }
         activity = null
-    }
-
-    private fun checkIfFitInstalled(result: Result) {
-        if (context == null) {
-            result.success(false)
-            Log.i("checkIfFitInstalled", "no context")
-            return
-        }
-
-        try {
-            context!!.packageManager.getPackageInfo(
-                "com.google.android.apps.fitness",
-                PackageManager.GET_ACTIVITIES
-            )
-            Log.i("checkIfFitInstalled", "Installed")
-            result.success(true) // if package is found, return true
-        } catch (e: PackageManager.NameNotFoundException) { // catch specific exception
-            Log.i("checkIfFitInstalled", "has Exception")
-            result.success(false)
-        }
-    }
-
-    //
-    private fun checkGoogleSignInFitnessPermission(call: MethodCall, result: Result) {
-        if (activity == null) {
-            return
-        }
-        val fitnessOptions = FitnessOptions.builder()
-            // 消費カロリー
-            .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
-            // 歩数
-            .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-            // 心拍数
-            .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
-            // 体温
-            .addDataType(HealthDataTypes.TYPE_BODY_TEMPERATURE, FitnessOptions.ACCESS_READ)
-            // 最高血圧
-            .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
-            // 最低血圧
-            .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
-            // 酸素飽和度
-            .addDataType(HealthDataTypes.TYPE_OXYGEN_SATURATION, FitnessOptions.ACCESS_READ)
-            // 血糖値
-            .addDataType(HealthDataTypes.TYPE_BLOOD_GLUCOSE, FitnessOptions.ACCESS_READ)
-            // 睡眠
-            .addDataType(DataType.TYPE_SLEEP_SEGMENT, FitnessOptions.ACCESS_READ)
-            .accessSleepSessions(FitnessOptions.ACCESS_READ)
-            // ワークアウト
-            .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
-            .build()
-
-        val account = GoogleSignIn.getAccountForExtension(activity!!, fitnessOptions)
-        GoogleSignIn.requestPermissions(
-            activity!!,
-            GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-            account,
-            fitnessOptions
-        )
-    }
-
-    private fun hasMfPermissions(call: MethodCall, result: Result) {
-        if (context == null) {
-            result.success(false)
-            return
-        }
-
-        val fitnessOptions = FitnessOptions.builder()
-            // 消費カロリー
-            .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
-            // 歩数
-            .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-            // 心拍数
-            .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
-            // 体温
-            .addDataType(HealthDataTypes.TYPE_BODY_TEMPERATURE, FitnessOptions.ACCESS_READ)
-            // 最高血圧
-            .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
-            // 最低血圧
-            .addDataType(HealthDataTypes.TYPE_BLOOD_PRESSURE, FitnessOptions.ACCESS_READ)
-            // 酸素飽和度
-            .addDataType(HealthDataTypes.TYPE_OXYGEN_SATURATION, FitnessOptions.ACCESS_READ)
-            // 血糖値
-            .addDataType(HealthDataTypes.TYPE_BLOOD_GLUCOSE, FitnessOptions.ACCESS_READ)
-            // 睡眠
-            .addDataType(DataType.TYPE_SLEEP_SEGMENT, FitnessOptions.ACCESS_READ)
-            .accessSleepSessions(FitnessOptions.ACCESS_READ)
-            // ワークアウト
-            .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_READ)
-            .build()
-
-        val isGranted = GoogleSignIn.hasPermissions(
-            GoogleSignIn.getLastSignedInAccount(context!!),
-            fitnessOptions
-        )
-
-        result.success(isGranted)
     }
 
     private fun getMfData(call: MethodCall, result: Result) {
@@ -1151,6 +1051,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             accessGoogleFit(call, result, c, account)
         }
     }
+
 
     private fun accessGoogleFit(
         call: MethodCall,
@@ -1188,7 +1089,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     .build()
                 Fitness.getSessionsClient(context, account)
                     .readSession(request)
-                    .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type, result))
+                    .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type))
                     .addOnFailureListener(
                         errHandler(
                             result,
@@ -1239,5 +1140,17 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     )
             }
         }
+    }
+
+    private fun sendSuccess(r: Any) {
+        val result = mResult ?: return
+        result.success(r)
+        mResult = null
+    }
+
+    private fun sendError(errorCode: String, errorMsg: String, errorDetails: Any?) {
+        val result = mResult ?: return
+        result.error(errorCode, errorMsg, errorDetails)
+        mResult = null
     }
 }
