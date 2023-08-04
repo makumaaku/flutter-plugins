@@ -870,10 +870,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     Log.w("revokePermissions", "There was an error disabling Google Fit", e)
                     result.success(false)
                 }
-
-                Log.w("revokePermissions", "There was an error disabling Google Fit", e)
-
-                result.success(false)
             }
     }
 
