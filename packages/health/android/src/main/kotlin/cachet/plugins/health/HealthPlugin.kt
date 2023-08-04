@@ -561,22 +561,28 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                         "Google Fitとの連携は既に解除されています"
                     )
                     // Googleアカウントとの連携を解除する
-                    val signInOptions = GoogleSignInOptions.Builder()
-                        .addExtension(optionsToRegister)
-                        .build()
-                    GoogleSignIn.getClient(ac.applicationContext, signInOptions)
-                        .revokeAccess()
+                    revokeAccessToGoogleAccount(optionsToRegister, ac)
                     sendSuccess(true)
                 } else if (e is ApiException && e.statusCode == 4) {
                     // com.google.android.gms.common.api.ApiException: 4: The user must be signed in to make this API call.
                     Log.w("revokePermissions", "サインインされていません", e)
                     // そもそもGoogleアカウントがサインイン状態でないので、GoogleFitとの接続を解除判定とする
+                    // 選択されているGoogleアカウントの情報は残っているようだったので、
+                    revokeAccessToGoogleAccount(optionsToRegister, ac)
                     sendSuccess(true)
                 } else {
                     Log.w("revokePermissions", "There was an error disabling Google Fit", e)
                     sendError("disableFit-failed", "GoogleFitとの接続の解除に失敗しました", errorDetails = e)
                 }
             }
+    }
+
+    private fun revokeAccessToGoogleAccount(fitnessOptions: FitnessOptions, ac: Activity) {
+        val signInOptions = GoogleSignInOptions.Builder()
+            .addExtension(fitnessOptions)
+            .build()
+        GoogleSignIn.getClient(ac.applicationContext, signInOptions)
+            .revokeAccess()
     }
 
     /// Called when the "requestAuthorization" is invoked from Flutter
