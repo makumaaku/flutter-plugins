@@ -567,8 +567,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                     // com.google.android.gms.common.api.ApiException: 4: The user must be signed in to make this API call.
                     Log.w("revokePermissions", "サインインされていません", e)
                     // そもそもGoogleアカウントがサインイン状態でないので、GoogleFitとの接続を解除判定とする
-                    // 選択されているGoogleアカウントの情報は残っているようだったので、
-                    revokeAccessToGoogleAccount(optionsToRegister, ac)
+                    // 選択されているGoogleアカウントの情報は残っているようだったので、以下の処理を呼び出すのか検討
+//                    revokeAccessToGoogleAccount(optionsToRegister, ac)
                     sendSuccess(true)
                 } else {
                     Log.w("revokePermissions", "There was an error disabling Google Fit", e)
