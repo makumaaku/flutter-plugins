@@ -9,6 +9,8 @@ import android.util.Log
 import androidx.annotation.NonNull
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessActivities
 import com.google.android.gms.fitness.FitnessOptions
@@ -21,7 +23,6 @@ import com.google.android.gms.fitness.result.DataReadResponse
 import com.google.android.gms.fitness.result.SessionReadResponse
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import io.flutter.BuildConfig
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -49,7 +50,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     private var threadPoolExecutor: ExecutorService? = null
 
     // ヘルスケアデータ取得用
-    private var googleSignInAccount: GoogleSignInAccount? = null
     private var mResult: Result? = null
 
 
@@ -853,7 +853,27 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 result.success(true)
             }
             .addOnFailureListener { e ->
+                if (e is ApiException && e.statusCode == 5010) {
+                    // 参考
+                    // https://developers.google.com/android/reference/com/google/android/gms/fitness/FitnessStatusCodes#public-static-final-int-app_not_fit_enabled
+                    Log.w(
+                        "revokePermissions",
+                        "Google Fitとの連携は既に解除されています"
+                    )
+                    // Googleアカウントとの連携を解除する
+                    val signInOptions = GoogleSignInOptions.Builder()
+                        .addExtension(optionsToRegister)
+                        .build()
+                    GoogleSignIn.getClient(ac.applicationContext, signInOptions)
+                        .revokeAccess()
+                    result.success(true)
+                } else {
+                    Log.w("revokePermissions", "There was an error disabling Google Fit", e)
+                    result.success(false)
+                }
+
                 Log.w("revokePermissions", "There was an error disabling Google Fit", e)
+
                 result.success(false)
             }
     }
@@ -1124,7 +1144,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
         val optionsToRegister = callToHealthTypes(call)
         val account = GoogleSignIn.getAccountForExtension(c, optionsToRegister)
-        googleSignInAccount = account
 
         /// Not granted? Ask for permission
         val hasPermissions = hasPermissions(call, result)
