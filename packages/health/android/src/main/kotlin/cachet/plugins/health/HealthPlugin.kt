@@ -730,14 +730,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 Log.i("accessGoogleFit", "readSession")
                 Fitness.getSessionsClient(context, account)
                     .readSession(request)
-                    .addOnSuccessListener{
-                        sleepDataHandler(type)
-                    }
-                    .addOnFailureListener{
+                    .addOnSuccessListener(threadPoolExecutor!!, sleepDataHandler(type))
+                    .addOnFailureListener(
                         errHandler(
                             "There was an error getting the sleeping data!"
                         )
-                    }
+                    )
             }
             DataType.TYPE_ACTIVITY_SEGMENT -> {
                 Log.i("accessGoogleFit", "TYPE_ACTIVITY_SEGMENT")
@@ -754,14 +752,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 Log.i("accessGoogleFit", "readSession")
                 Fitness.getSessionsClient(context, account)
                     .readSession(readRequest)
-                    .addOnSuccessListener {
-                        workoutDataHandler(type, result)
-                    }
-                    .addOnFailureListener {
+                    .addOnSuccessListener(threadPoolExecutor!!, workoutDataHandler(type, result))
+                    .addOnFailureListener(
                         errHandler(
                             "There was an error getting the workout data!"
                         )
-                    }
+                    )
             }
             else -> {
                 Log.i("accessGoogleFit", "TYPE_OTHER_SEGMENT")
@@ -772,14 +768,15 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                             .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                             .build(),
                     )
-                    .addOnSuccessListener {
+                    .addOnSuccessListener(
+                        threadPoolExecutor!!,
                         dataHandler(dataType, field, result)
-                    }
-                    .addOnFailureListener {
+                    )
+                    .addOnFailureListener(
                         errHandler(
                             "There was an error getting the data!"
                         )
-                    }
+                    )
             }
         }
     }
