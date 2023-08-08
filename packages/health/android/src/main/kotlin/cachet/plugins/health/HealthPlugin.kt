@@ -693,6 +693,22 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         val typesBuilder = FitnessOptions.builder()
         typesBuilder.addDataType(dataType)
 
+        if (threadPoolExecutor is ThreadPoolExecutor) {
+            val executor = threadPoolExecutor as ThreadPoolExecutor
+
+            // 現在使用しているスレッド数の取得
+            val activeThreads = executor.activeCount
+            Log.i("accessGoogleFit", "アクティブなスレッド数: $activeThreads")
+
+
+            val maximumPoolSize = executor.maximumPoolSize
+            Log.i("accessGoogleFit", "最大スレッド数: $maximumPoolSize")
+
+            // 全スレッドが使用されているかどうかの判定
+            val useAllThread = activeThreads == executor.maximumPoolSize
+            Log.i("accessGoogleFit", "全スレッドを使用中?: $useAllThread")
+        }
+
         // Add special cases for accessing workouts or sleep data.
         if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
             typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
