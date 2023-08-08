@@ -649,6 +649,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
 
     private fun getData(call: MethodCall, result: Result) {
+        Log.i("getData", "GET DATA")
         mResult = result
         val c = context
         val act = activity;

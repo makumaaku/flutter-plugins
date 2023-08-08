@@ -446,6 +446,7 @@ class HealthFactory {
       'types': keys,
       "permissions": mPermissions,
     };
+    print('[Call getData]');
     final fetchedDataPoints = await _channel.invokeMethod('getData', args);
     // データの取得に失敗するとfalseが返却される..
     if (fetchedDataPoints.runtimeType == bool) {
