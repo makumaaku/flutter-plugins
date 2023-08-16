@@ -251,7 +251,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 }
             }
         }
-        return false
+        return true
     }
 
     private fun keyToHealthDataType(type: String): DataType {
