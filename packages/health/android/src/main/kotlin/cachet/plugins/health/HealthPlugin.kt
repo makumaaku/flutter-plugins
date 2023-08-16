@@ -2,7 +2,7 @@ package cachet.plugins.health
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
+//import android.content.Intent
 import android.os.Handler
 import android.util.Log
 import androidx.annotation.NonNull
@@ -28,13 +28,12 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.util.*
 import java.util.concurrent.*
 
 class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandler,
-    ActivityResultListener, Result, ActivityAware, FlutterPlugin {
+     Result, ActivityAware, FlutterPlugin {
 
     private val GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1111
     private val CHANNEL_NAME = "flutter_health"
@@ -214,7 +213,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         fun registerWith(registrar: Registrar) {
             val channel = MethodChannel(registrar.messenger(), CHANNEL_NAME)
             val plugin = HealthPlugin(channel)
-            registrar.addActivityResultListener(plugin)
+//            registrar.addActivityResultListener(plugin)
             channel.setMethodCallHandler(plugin)
         }
     }
@@ -234,25 +233,25 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
 
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        Log.i("FLUTTER_HEALTH", "Request Code $requestCode")
-        if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
-            when (resultCode) {
-                Activity.RESULT_OK -> {
-                    Log.i("FLUTTER_HEALTH", "Access Granted!")
-                    sendSuccess(true)
-                }
-                Activity.RESULT_CANCELED -> {
-                    Log.i("FLUTTER_HEALTH", "Access Denied!")
-                    sendSuccess(false)
-                }
-                Activity.RESULT_FIRST_USER -> {
-                    Log.i("FLUTTER_HEALTH", "Activity.RESULT_FIRST_USER")
-                }
-            }
-        }
-        return true
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+//        Log.i("FLUTTER_HEALTH", "Request Code $requestCode")
+//        if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
+//            when (resultCode) {
+//                Activity.RESULT_OK -> {
+//                    Log.i("FLUTTER_HEALTH", "Access Granted!")
+//                    sendSuccess(true)
+//                }
+//                Activity.RESULT_CANCELED -> {
+//                    Log.i("FLUTTER_HEALTH", "Access Denied!")
+//                    sendSuccess(false)
+//                }
+//                Activity.RESULT_FIRST_USER -> {
+//                    Log.i("FLUTTER_HEALTH", "Activity.RESULT_FIRST_USER")
+//                }
+//            }
+//        }
+//        return true
+//    }
 
     private fun keyToHealthDataType(type: String): DataType {
         return when (type) {
@@ -629,7 +628,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         if (channel == null) {
             return
         }
-        binding.addActivityResultListener(this)
+//        binding.addActivityResultListener(this)
         activity = binding.activity
     }
 
